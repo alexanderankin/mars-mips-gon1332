@@ -1,13 +1,11 @@
 package mars;
 
-import mars.venus.*;
 import mars.assembler.*;
 import mars.simulator.*;
 import mars.mips.hardware.*;
 
 import java.util.*;
 import java.io.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 /*
@@ -53,10 +51,10 @@ public class MIPSprogram {
     private boolean steppedExecution = false;
 
     private String filename;
-    private ArrayList sourceList;
-    private ArrayList tokenList;
-    private ArrayList parsedList;
-    private ArrayList machineList;
+    private List<String> sourceList;
+    private List<TokenList> tokenList;
+    private List<ProgramStatement> parsedList;
+    private List<ProgramStatement> machineList;
     private BackStepper backStepper;
     private SymbolTable localSymbolTable;
     private MacroPool macroPool;
@@ -69,7 +67,7 @@ public class MIPSprogram {
      * @return ArrayList of String.  Each String is one line of MIPS source code.
      **/
 
-    public ArrayList getSourceList() {
+    public List<String> getSourceList() {
         return sourceList;
     }
 
@@ -82,7 +80,7 @@ public class MIPSprogram {
 
     public void setSourceLineList(ArrayList<SourceLine> sourceLineList) {
         this.sourceLineList = sourceLineList;
-        sourceList = new ArrayList();
+        sourceList = new ArrayList<>();
         for (SourceLine sl : sourceLineList) {
             sourceList.add(sl.getSource());
         }
@@ -117,7 +115,7 @@ public class MIPSprogram {
      * @see TokenList
      **/
 
-    public ArrayList getTokenList() {
+    public List<TokenList> getTokenList() {
         return tokenList;
     }
 
@@ -139,8 +137,8 @@ public class MIPSprogram {
      * @see ProgramStatement
      **/
 
-    public ArrayList createParsedList() {
-        parsedList = new ArrayList();
+    public List<ProgramStatement> createParsedList() {
+        parsedList = new ArrayList<>();
         return parsedList;
     }
 
@@ -152,7 +150,7 @@ public class MIPSprogram {
      * @see ProgramStatement
      **/
 
-    public ArrayList getParsedList() {
+    public List<ProgramStatement> getParsedList() {
         return parsedList;
     }
 
@@ -164,7 +162,7 @@ public class MIPSprogram {
      * @see ProgramStatement
      **/
 
-    public ArrayList getMachineList() {
+    public List<ProgramStatement> getMachineList() {
         return machineList;
     }
 
@@ -208,7 +206,7 @@ public class MIPSprogram {
 
     public String getSourceLine(int i) {
         if ((i >= 1) && (i <= sourceList.size()))
-            return (String) sourceList.get(i - 1);
+            return sourceList.get(i - 1);
         else
             return null;
     }
@@ -225,11 +223,10 @@ public class MIPSprogram {
 
     public void readSource(String file) throws ProcessingException {
         this.filename = file;
-        this.sourceList = new ArrayList();
-        ErrorList errors = null;
+        this.sourceList = new ArrayList<>();
+        ErrorList errors;
         BufferedReader inputFile;
         String line;
-        int lengthSoFar = 0;
         try {
             inputFile = new BufferedReader(new FileReader(file));
             line = inputFile.readLine();
@@ -242,7 +239,6 @@ public class MIPSprogram {
             errors.add(new ErrorMessage((MIPSprogram) null, 0, 0, e.toString()));
             throw new ProcessingException(errors);
         }
-        return;
     }
 
     /**
@@ -255,7 +251,6 @@ public class MIPSprogram {
         this.tokenizer = new Tokenizer();
         this.tokenList = tokenizer.tokenize(this);
         this.localSymbolTable = new SymbolTable(this.filename); // prepare for assembly
-        return;
     }
 
     /**
@@ -274,15 +269,14 @@ public class MIPSprogram {
      * @throws ProcessingException Will throw exception if errors occured while reading or tokenizing.
      **/
 
-    public ArrayList prepareFilesForAssembly(ArrayList filenames, String leadFilename, String exceptionHandler) throws ProcessingException {
-        ArrayList MIPSprogramsToAssemble = new ArrayList();
+    public List<MIPSprogram> prepareFilesForAssembly(List<String> filenames, String leadFilename, String exceptionHandler) throws ProcessingException {
+        List<MIPSprogram> MIPSprogramsToAssemble = new ArrayList<>();
         int leadFilePosition = 0;
         if (exceptionHandler != null && exceptionHandler.length() > 0) {
             filenames.add(0, exceptionHandler);
             leadFilePosition = 1;
         }
-        for (int i = 0; i < filenames.size(); i++) {
-            String filename = (String) filenames.get(i);
+        for (String filename : filenames) {
             MIPSprogram preparee = (filename.equals(leadFilename)) ? this : new MIPSprogram();
             preparee.readSource(filename);
             preparee.tokenize();
@@ -307,7 +301,7 @@ public class MIPSprogram {
      * @throws ProcessingException Will throw exception if errors occured while assembling.
      **/
 
-    public ErrorList assemble(ArrayList MIPSprogramsToAssemble, boolean extendedAssemblerEnabled)
+    public ErrorList assemble(List<MIPSprogram> MIPSprogramsToAssemble, boolean extendedAssemblerEnabled)
             throws ProcessingException {
         return assemble(MIPSprogramsToAssemble, extendedAssemblerEnabled, false);
     }
@@ -325,7 +319,7 @@ public class MIPSprogram {
      * @throws ProcessingException Will throw exception if errors occured while assembling.
      **/
 
-    public ErrorList assemble(ArrayList MIPSprogramsToAssemble, boolean extendedAssemblerEnabled,
+    public ErrorList assemble(List<MIPSprogram> MIPSprogramsToAssemble, boolean extendedAssemblerEnabled,
                               boolean warningsAreErrors) throws ProcessingException {
         this.backStepper = null;
         Assembler asm = new Assembler();
@@ -392,6 +386,7 @@ public class MIPSprogram {
     public boolean simulateStepAtPC(AbstractAction a) throws ProcessingException {
         steppedExecution = true;
         Simulator sim = Simulator.getInstance();
+        @SuppressWarnings("UnnecessaryLocalVariable")
         boolean done = sim.simulate(this, RegisterFile.getProgramCounter(), 1, null, a);
         return done;
     }

@@ -1,15 +1,9 @@
 package mars.venus;
 
-import mars.*;
-import mars.util.*;
-
-import java.util.ArrayList;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-import java.io.*;
-import java.beans.*;
+import java.io.File;
+import java.beans.PropertyChangeListener;
 
 	/*
 Copyright (c) 2003-2008,  Pete Sanderson and Kenneth Vollmar
@@ -42,12 +36,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /**
  * Action  for the File -> Open menu item
  */
+@SuppressWarnings("unused")
 public class FileOpenAction extends GuiAction {
 
     private File mostRecentlyOpenedFile;
     private JFileChooser fileChooser;
     private int fileFilterCount;
-    private ArrayList fileFilterList;
+    private java.util.List<String> fileFilterList;
     private PropertyChangeListener listenForUserAddedFileFilter;
 
     public FileOpenAction(String name, Icon icon, String descrip,

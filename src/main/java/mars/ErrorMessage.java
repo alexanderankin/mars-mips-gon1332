@@ -32,19 +32,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
- * Represents occurrance of an error detected during tokenizing, assembly or simulation.
+ * Represents occurrence of an error detected during tokenizing, assembly or simulation.
  *
  * @author Pete Sanderson
  * @version August 2003
  **/
 
 public class ErrorMessage {
-    private boolean isWarning; // allow for warnings too (added Nov 2006)
-    private String filename; // name of source file  (added Oct 2006)
-    private int line;     // line in source code where error detected
-    private int position; // position in source line where error detected
-    private String message;
-    private String macroExpansionHistory;
+    private final boolean isWarning; // allow for warnings too (added Nov 2006)
+    private final String filename; // name of source file  (added Oct 2006)
+    private final int line;     // line in source code where error detected
+    private final int position; // position in source line where error detected
+    private final String message;
+    private final String macroExpansionHistory;
 
     /**
      * Constant to indicate this message is warning not error
@@ -80,7 +80,7 @@ public class ErrorMessage {
      * @param position              Position within line being processed when error occurred.  Normally is starting
      *                              position of source token.
      * @param message               String containing appropriate error message.
-     * @param macroExpansionHistory
+     * @param macroExpansionHistory macroExpansionHistory
      * @deprecated Newer constructors replace the String filename parameter with a MIPSprogram parameter to provide more information.
      **/
     // Added macroExpansionHistory Dec 2012
@@ -191,15 +191,15 @@ public class ErrorMessage {
             this.macroExpansionHistory = "";
         } else {
             this.line = defineLine.get(0);
-            this.macroExpansionHistory = "" + statement.getSourceLine();
+            this.macroExpansionHistory = String.valueOf(statement.getSourceLine());
         }
     }
 
     private ArrayList<Integer> parseMacroHistory(String string) {
         Pattern pattern = Pattern.compile("<\\d+>");
         Matcher matcher = pattern.matcher(string);
-        String verify = new String(string).trim();
-        ArrayList<Integer> macroHistory = new ArrayList<Integer>();
+        String verify = string.trim();
+        ArrayList<Integer> macroHistory = new ArrayList<>();
         while (matcher.find()) {
             String match = matcher.group();
             if (verify.indexOf(match) == 0) {

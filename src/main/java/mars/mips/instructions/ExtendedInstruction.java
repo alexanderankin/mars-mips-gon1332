@@ -47,7 +47,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class ExtendedInstruction extends Instruction {
 
-    private ArrayList translationStrings, compactTranslationStrings;
+    private final List<String> translationStrings, compactTranslationStrings;
 
     /**
      * Constructor for ExtendedInstruction.
@@ -107,7 +107,7 @@ public class ExtendedInstruction extends Instruction {
      * Get length in bytes that this extended instruction requires in its
      * binary form. The answer depends on how many basic instructions it
      * expands to.  This may vary, if expansion includes a nop, depending on
-     * whether or not delayed branches are enabled. Each requires 4 bytes.
+     * Whether delayed branches are enabled. Each requires 4 bytes.
      *
      * @return int length in bytes of corresponding binary instruction(s).
      */
@@ -124,7 +124,7 @@ public class ExtendedInstruction extends Instruction {
      * @return ArrayList of Strings.
      */
 
-    public ArrayList getBasicIntructionTemplateList() {
+    public List<String> getBasicIntructionTemplateList() {
         return translationStrings;
     }
 
@@ -133,7 +133,7 @@ public class ExtendedInstruction extends Instruction {
      * binary form if it includes an alternative expansion for compact
      * memory (16 bit addressing) configuration. The answer depends on
      * how many basic instructions it expands to.  This may vary, if
-     * expansion includes a nop, depending on whether or not delayed
+     * expansion includes a nop, depending on Whether delayed
      * branches are enabled. Each requires 4 bytes.
      *
      * @return int length in bytes of corresponding binary instruction(s).
@@ -147,7 +147,7 @@ public class ExtendedInstruction extends Instruction {
 
 
     /**
-     * Determine whether or not this pseudo-instruction has a second
+     * Determine Whether this pseudo-instruction has a second
      * translation optimized for 16 bit address space: a compact version.
      */
     public boolean hasCompactTranslation() {
@@ -164,7 +164,7 @@ public class ExtendedInstruction extends Instruction {
      * have a compact alternative.
      */
 
-    public ArrayList getCompactBasicIntructionTemplateList() {
+    public List<String> getCompactBasicIntructionTemplateList() {
         return compactTranslationStrings;
     }
 
@@ -208,8 +208,8 @@ public class ExtendedInstruction extends Instruction {
      * <LI>BROFFnm means substitute n if delayed branching is NOT enabled otherwise substitute m.  n and m are single digit numbers indicating constant branch offset (in words).  Added in 3.4.1 release.
      * </UL>
      *
-     * @param template  a String containing template for basic statement.
-     * @param tokenList a TokenList containing tokens from extended instruction.
+     * @param template     a String containing template for basic statement.
+     * @param theTokenList a TokenList containing tokens from extended instruction.
      * @return String representing basic assembler statement.
      */
 
@@ -484,7 +484,7 @@ public class ExtendedInstruction extends Instruction {
                 instruction = substitute(instruction, "LLP", String.valueOf(addr << 16 >> 16));// addr & 0xffff));
             }
         }
-        // 23-Jan-2008 DPS.  Substitute correct constant branch offset depending on whether or not
+        // 23-Jan-2008 DPS.  Substitute correct constant branch offset depending on Whether
         // delayed branching is enabled. BROFF is followed by 2 digits.  The first is branch offset
         // to substitute if delayed branching is DISABLED, second is offset if ENABLED.
         if ((index = instruction.indexOf("BROFF")) >= 0) {
@@ -582,11 +582,11 @@ public class ExtendedInstruction extends Instruction {
     // expands to, which is a string, and breaks out into separate
     // instructions.  They are separated by '\n' character.
 
-    private ArrayList buildTranslationList(String translation) {
+    private List<String> buildTranslationList(String translation) {
         if (translation == null || translation.length() == 0) {
             return null;
         }
-        ArrayList translationList = new ArrayList();
+        List<String> translationList = new ArrayList<>();
         StringTokenizer st = new StringTokenizer(translation, "\n");
         while (st.hasMoreTokens()) {
             translationList.add(st.nextToken());
@@ -599,11 +599,11 @@ public class ExtendedInstruction extends Instruction {
      * Get length in bytes that this extended instruction requires in its
      * binary form. The answer depends on how many basic instructions it
      * expands to.  This may vary, if expansion includes a nop, depending on
-     * whether or not delayed branches are enabled. Each requires 4 bytes.
+     * Whether delayed branches are enabled. Each requires 4 bytes.
      * Returns length in bytes of corresponding binary instruction(s).
      * Returns 0 if the ArrayList is null or empty.
      */
-    private int getInstructionLength(ArrayList translationList) {
+    private int getInstructionLength(List<String> translationList) {
         if (translationList == null || translationList.size() == 0) {
             return 0;
         }
@@ -611,8 +611,8 @@ public class ExtendedInstruction extends Instruction {
         // if Delayed branching is enabled.  Otherwise generate nothing.  If generating nothing,
         // then don't count the nop in the instruction length.   DPS 23-Jan-2008
         int instructionCount = 0;
-        for (int i = 0; i < translationList.size(); i++) {
-            if (((String) translationList.get(i)).indexOf("DBNOP") >= 0 && !Globals.getSettings().getDelayedBranchingEnabled())
+        for (String s : translationList) {
+            if (s.contains("DBNOP") && !Globals.getSettings().getDelayedBranchingEnabled())
                 continue;
             instructionCount++;
         }

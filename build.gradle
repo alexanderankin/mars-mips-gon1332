@@ -15,6 +15,16 @@ repositories {
 
 mainClassName = 'Mars'
 
+dependencies {
+    testAnnotationProcessor('org.projectlombok:lombok:1.18.28')
+    testCompileOnly('org.projectlombok:lombok:1.18.28')
+
+    testImplementation('org.junit.jupiter:junit-jupiter-engine:5.9.2')
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.0'
+}
+
+tasks.withType(Test).configureEach { useJUnitPlatform() }
+
 jar {
     manifest {
         archiveBaseName = 'mars'
@@ -26,5 +36,6 @@ jar {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    // UnnecessaryUnicodeEscape
     options.encoding = "iso-8859-1"
 }

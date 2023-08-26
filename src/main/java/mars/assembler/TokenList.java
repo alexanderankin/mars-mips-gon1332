@@ -1,6 +1,7 @@
 package mars.assembler;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /*
 Copyright (c) 2003-2013,  Pete Sanderson and Kenneth Vollmar
@@ -40,14 +41,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class TokenList implements Cloneable {
 
-    private ArrayList tokenList;
+    private List<Token> tokenList;
     private String processedLine;// DPS 03-Jan-2013
 
     /**
      * Constructor for objects of class TokenList
      */
     public TokenList() {
-        tokenList = new ArrayList();
+        tokenList = new ArrayList<>();
         processedLine = ""; // DPS 03-Jan-2013
     }
 
@@ -82,7 +83,7 @@ public class TokenList implements Cloneable {
      * @return the requested token, or ArrayIndexOutOfBounds exception
      */
     public Token get(int pos) {
-        return (Token) tokenList.get(pos);
+        return tokenList.get(pos);
     }
 
     /**
@@ -141,11 +142,11 @@ public class TokenList implements Cloneable {
      */
 
     public String toString() {
-        String stringified = "";
-        for (int i = 0; i < tokenList.size(); i++) {
-            stringified += tokenList.get(i).toString() + " ";
+        StringBuilder stringified = new StringBuilder();
+        for (Token token : tokenList) {
+            stringified.append(token.toString()).append(" ");
         }
-        return stringified;
+        return stringified.toString();
     }
 
 
@@ -157,28 +158,17 @@ public class TokenList implements Cloneable {
      */
 
     public String toTypeString() {
-        String stringified = "";
-        for (int i = 0; i < tokenList.size(); i++) {
-            stringified += ((Token) tokenList.get(i)).getType().toString() + " ";
+        StringBuilder stringified = new StringBuilder();
+        for (Token token : tokenList) {
+            stringified.append(token.getType().toString()).append(" ");
         }
-        return stringified;
+        return stringified.toString();
     }
 
-    /**
-     * Makes clone (shallow copy) of this token list object.
-     *
-     * @return the cloned list.
-     */
-    // Clones are a bit tricky.  super.clone() handles primitives (e.g. values) correctly
-    // but the ArrayList itself has to be cloned separately -- otherwise clone will have
-    // alias to original token list!!
-    public Object clone() {
-        try {
-            TokenList t = (TokenList) super.clone();
-            t.tokenList = (ArrayList) tokenList.clone();
-            return t;
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
+    public TokenList copy() {
+        TokenList copy = new TokenList();
+        copy.tokenList = new ArrayList<>(this.tokenList);
+        copy.processedLine = this.processedLine;
+        return copy;
     }
 }

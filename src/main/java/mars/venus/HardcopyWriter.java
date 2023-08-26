@@ -28,7 +28,6 @@
 package mars.venus;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
@@ -67,7 +66,8 @@ public class HardcopyWriter extends Writer {
     // A field to save state between invocations of the write( ) method
     private boolean last_char_was_return = false;
     // A static variable that holds user preferences between print jobs
-    protected static Properties printprops = new Properties();
+    protected static final Properties printprops = new Properties();
+    protected static final Object LOCK = new Object();
 
     /**
      * The constructor for this class has a bunch of arguments:
@@ -99,7 +99,8 @@ public class HardcopyWriter extends Writer {
         }
         if (job == null)
             throw new PrintCanceledException("User cancelled print request");
-        /*******************************************************
+        /*
+         *******************************************************
          SANDERSON OVERRIDE 8-17-2004:
          I didn't like the results produced by the code below, so am commenting
          it out and just setting pagedpi to 72.  This assures, among other things,
@@ -129,7 +130,7 @@ public class HardcopyWriter extends Writer {
 
         // Compute coordinates of the upper-left corner of the page.
         // I.e. the coordinates of (leftmargin, topmargin). Also compute
-        // the width and height inside of the margins.
+        // the width and height inside the margins.
         x0 = (int) (leftmargin * pagedpi);
         y0 = (int) (topmargin * pagedpi);
         width = pagesize.width - (int) ((leftmargin + rightmargin) * pagedpi);
@@ -164,7 +165,7 @@ public class HardcopyWriter extends Writer {
      * implement this. All other versions of write( ) are variants of this one
      **/
     public void write(char[] buffer, int index, int len) {
-        synchronized (this.lock) { // For thread safety
+        synchronized (LOCK) { // For thread safety
             // Loop through all the characters passed to us
             for (int i = index; i < index + len; i++) {
                 // If we haven't begun a page (or a new page), do that now.
@@ -221,7 +222,7 @@ public class HardcopyWriter extends Writer {
      * Print the pending page (if any) and terminate the PrintJob.
      */
     public void close() {
-        synchronized (this.lock) {
+        synchronized (LOCK) {
             if (page != null) page.dispose(); // Send page to the printer
             job.end(); // Terminate the job
         }
@@ -234,13 +235,11 @@ public class HardcopyWriter extends Writer {
      * Monospaced font having the same metrics.
      **/
     public void setFontStyle(int style) {
-        synchronized (this.lock) {
+        synchronized (LOCK) {
             // Try to set a new font, but restore current one if it fails
-            Font current = font;
             try {
                 font = new Font("Monospaced", style, fontsize);
-            } catch (Exception e) {
-                font = current;
+            } catch (Exception ignored) {
             }
             // If a page is pending, set the new font. Otherwise newpage( ) will
             if (page != null) page.setFont(font);
@@ -251,7 +250,7 @@ public class HardcopyWriter extends Writer {
      * End the current page. Subsequent output will be on a new page.
      */
     public void pageBreak() {
-        synchronized (this.lock) {
+        synchronized (LOCK) {
             newpage();
         }
     }
@@ -341,7 +340,7 @@ public class HardcopyWriter extends Writer {
             in.close();
             out.close();
         } catch (Exception e) {
-            System.err.println(e);
+            e.printStackTrace();
             System.err.println("Usage: " +
                                "java HardcopyWriter$PrintFile <filename>");
             System.exit(1);

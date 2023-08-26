@@ -40,7 +40,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @version July 2005
  **/
 
-// Adapted from RegisterFile class developed by Bumgarner et al in 2003.
+// Adapted from RegisterFile class developed by Bumgarner et al. in 2003.
 // The FPU registers will be implemented by Register objects.  Such objects
 // can only hold int values, but we can use Float.floatToIntBits() to translate
 // a 32 bit float value into its equivalent 32-bit int representation, and
@@ -51,7 +51,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // storing into registers, and reassembled upon retrieval.
 
 public class Coprocessor1 {
-    private static Register[] registers =
+    private static final Register[] registers =
             {new Register("$f0", 0, 0), new Register("$f1", 1, 0),
                     new Register("$f2", 2, 0), new Register("$f3", 3, 0),
                     new Register("$f4", 4, 0), new Register("$f5", 5, 0),
@@ -70,20 +70,19 @@ public class Coprocessor1 {
                     new Register("$f30", 30, 0), new Register("$f31", 31, 0)
             };
     // The 8 condition flags will be stored in bits 0-7 for flags 0-7.
-    private static Register condition = new Register("cf", 32, 0);
-    private static int numConditionFlags = 8;
+    private static final Register condition = new Register("cf", 32, 0);
+    private static final int numConditionFlags = 8;
 
     /**
      * Method for displaying the register values for debugging.
      **/
 
     public static void showRegisters() {
-        for (int i = 0; i < registers.length; i++) {
-
-            System.out.println("Name: " + registers[i].getName());
-            System.out.println("Number: " + registers[i].getNumber());
-            System.out.println("Value: " + registers[i].getValue());
-            System.out.println("");
+        for (Register register : registers) {
+            System.out.println("Name: " + register.getName());
+            System.out.println("Number: " + register.getNumber());
+            System.out.println("Value: " + register.getValue());
+            System.out.println();
         }
     }
 
@@ -279,7 +278,6 @@ public class Coprocessor1 {
 
     public static double getDoubleFromRegisterPair(int reg)
             throws InvalidRegisterAccessException {
-        double result = 0.0;
         if (reg % 2 != 0) {
             throw new InvalidRegisterAccessException();
         }
@@ -313,7 +311,6 @@ public class Coprocessor1 {
 
     public static long getLongFromRegisterPair(int reg)
             throws InvalidRegisterAccessException {
-        double result = 0.0;
         if (reg % 2 != 0) {
             throw new InvalidRegisterAccessException();
         }
@@ -346,11 +343,11 @@ public class Coprocessor1 {
 
     public static int updateRegister(int num, int val) {
         int old = 0;
-        for (int i = 0; i < registers.length; i++) {
-            if (registers[i].getNumber() == num) {
+        for (Register register : registers) {
+            if (register.getNumber() == num) {
                 old = (Globals.getSettings().getBackSteppingEnabled())
-                        ? Globals.program.getBackStepper().addCoprocessor1Restore(num, registers[i].setValue(val))
-                        : registers[i].setValue(val);
+                        ? Globals.program.getBackStepper().addCoprocessor1Restore(num, register.setValue(val))
+                        : register.setValue(val);
                 break;
             }
         }
@@ -360,7 +357,7 @@ public class Coprocessor1 {
     /**
      * Returns the value of the FPU register who's number is num.  Returns the
      * raw int value actually stored there.  If you need a float, use
-     * Float.intBitsToFloat() to get the equivent float.
+     * Float.intBitsToFloat() to get the equivalent float.
      *
      * @param num The FPU register number.
      * @return The int value of the given register.
@@ -379,9 +376,9 @@ public class Coprocessor1 {
 
     public static int getRegisterNumber(String n) {
         int j = -1;
-        for (int i = 0; i < registers.length; i++) {
-            if (registers[i].getName().equals(n)) {
-                j = registers[i].getNumber();
+        for (Register register : registers) {
+            if (register.getName().equals(n)) {
+                j = register.getNumber();
                 break;
             }
         }
@@ -411,9 +408,8 @@ public class Coprocessor1 {
             try {
                 // check for register number 0-31.
                 reg = registers[Binary.stringToInt(rName.substring(2))];    // KENV 1/6/05
-            } catch (Exception e) {
+            } catch (Exception ignored) {
                 // handles both NumberFormat and ArrayIndexOutOfBounds
-                reg = null;
             }
         }
         return reg;
@@ -425,8 +421,8 @@ public class Coprocessor1 {
      **/
 
     public static void resetRegisters() {
-        for (int i = 0; i < registers.length; i++)
-            registers[i].resetValue();
+        for (Register register : registers)
+            register.resetValue();
         clearConditionFlags();
     }
 
@@ -436,8 +432,8 @@ public class Coprocessor1 {
      * will add the given Observer to each one.
      */
     public static void addRegistersObserver(Observer observer) {
-        for (int i = 0; i < registers.length; i++) {
-            registers[i].addObserver(observer);
+        for (Register register : registers) {
+            register.addObserver(observer);
         }
     }
 
@@ -447,8 +443,8 @@ public class Coprocessor1 {
      * will delete the given Observer from each one.
      */
     public static void deleteRegistersObserver(Observer observer) {
-        for (int i = 0; i < registers.length; i++) {
-            registers[i].deleteObserver(observer);
+        for (Register register : registers) {
+            register.deleteObserver(observer);
         }
     }
 
@@ -511,7 +507,7 @@ public class Coprocessor1 {
     /**
      * Get array of condition flags (0-7).
      *
-     * @return array of int condition flags
+     * @return int array of int condition flags
      */
     public static int getConditionFlags() {
         return condition.getValue();

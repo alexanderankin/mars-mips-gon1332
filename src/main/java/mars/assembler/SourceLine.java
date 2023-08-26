@@ -41,10 +41,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * to the user.
  */
 public class SourceLine {
-    private String source;
+    private final String source;
     private String filename;
-    private MIPSprogram mipsProgram;
-    private int lineNumber;
+    private final MIPSprogram mipsProgram;
+    private final int lineNumber;
 
     /**
      * SourceLine constructor

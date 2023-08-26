@@ -4,6 +4,7 @@ import mars.Globals;
 import mars.mips.hardware.*;
 
 import java.io.*;
+import java.nio.file.Files;
 
 /**
  * Intel's Hex memory initialization format
@@ -35,30 +36,30 @@ public class IntelHexDumpFormat extends AbstractDumpFormat {
      */
     public void dumpMemoryRange(File file, int firstAddress, int lastAddress)
             throws AddressErrorException, IOException {
-        PrintStream out = new PrintStream(new FileOutputStream(file));
-        String string = null;
-        try {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(file.toPath()))) {
+            StringBuilder string;
             for (int address = firstAddress; address <= lastAddress; address += Memory.WORD_LENGTH_BYTES) {
                 Integer temp = Globals.memory.getRawWordOrNull(address);
                 if (temp == null)
                     break;
-                string = Integer.toHexString(temp.intValue());
+                string = new StringBuilder(Integer.toHexString(temp));
                 while (string.length() < 8) {
-                    string = '0' + string;
+                    // string.insert(0, '0');  // is this a bug?
+                    string.append('0').append(string);
                 }
-                String addr = Integer.toHexString(address - firstAddress);
+                StringBuilder addr = new StringBuilder(Integer.toHexString(address - firstAddress));
                 while (addr.length() < 4) {
-                    addr = '0' + addr;
+                    addr.insert(0, '0');
                 }
                 String chksum;
                 int tmp_chksum = 0;
                 tmp_chksum += 4;
                 tmp_chksum += 0xFF & (address - firstAddress);
                 tmp_chksum += 0xFF & ((address - firstAddress) >> 8);
-                tmp_chksum += 0xFF & temp.intValue();
-                tmp_chksum += 0xFF & (temp.intValue() >> 8);
-                tmp_chksum += 0xFF & (temp.intValue() >> 16);
-                tmp_chksum += 0xFF & (temp.intValue() >> 24);
+                tmp_chksum += 0xFF & temp;
+                tmp_chksum += 0xFF & (temp >> 8);
+                tmp_chksum += 0xFF & (temp >> 16);
+                tmp_chksum += 0xFF & (temp >> 24);
                 tmp_chksum = tmp_chksum % 256;
                 tmp_chksum = ~tmp_chksum + 1;
                 chksum = Integer.toHexString(0xFF & tmp_chksum);
@@ -67,8 +68,6 @@ public class IntelHexDumpFormat extends AbstractDumpFormat {
                 out.println(finalstr.toUpperCase());
             }
             out.println(":00000001FF");
-        } finally {
-            out.close();
         }
 
     }

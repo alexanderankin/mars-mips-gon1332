@@ -8,9 +8,7 @@ import mars.venus.editors.jeditsyntax.JEditBasedTextArea;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.undo.*;
-import java.text.*;
 import java.util.*;
 import java.io.*;
 
@@ -51,17 +49,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @author Sanderson and Bumgarner
  */
 
+@SuppressWarnings({"FieldMayBeFinal", "CommentedOutCode"})
 public class EditPane extends JPanel implements Observer {
 
     private MARSTextEditingArea sourceCode;
     private VenusUI mainUI;
-    private String currentDirectoryPath;
     private JLabel caretPositionLabel;
     private JCheckBox showLineNumbers;
     private JLabel lineNumbers;
+    /*
     private static int count = 0;
     private boolean isCompoundEdit = false;
     private CompoundEdit compoundEdit;
+    */
     private FileStatus fileStatus;
 
     /**
@@ -71,8 +71,6 @@ public class EditPane extends JPanel implements Observer {
     public EditPane(VenusUI appFrame) {
         super(new BorderLayout());
         this.mainUI = appFrame;
-        // user.dir, user's current working directory, is guaranteed to have a value
-        currentDirectoryPath = System.getProperty("user.dir");
         // mainUI.editor = new Editor(mainUI);
         // We want to be notified of editor font changes! See update() below.
         Globals.getSettings().addObserver(this);
@@ -158,8 +156,8 @@ public class EditPane extends JPanel implements Observer {
 
         // Listener fires when "Show Line Numbers" check box is clicked.
         showLineNumbers.addItemListener(
-                new ItemListener() {
-                    public void itemStateChanged(ItemEvent e) {
+                e -> {
+                    {
                         if (showLineNumbers.isSelected()) {
                             lineNumbers.setText(getLineNumbersList(sourceCode.getDocument()));
                             lineNumbers.setVisible(true);
@@ -217,16 +215,16 @@ public class EditPane extends JPanel implements Observer {
     private static final String spaces = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
     public String getLineNumbersList(javax.swing.text.Document doc) {
-        StringBuffer lineNumberList = new StringBuffer("<html>");
+        StringBuilder lineNumberList = new StringBuilder("<html>");
         int lineCount = doc.getDefaultRootElement().getElementCount(); // this.getSourceLineCount();
         int digits = Integer.toString(lineCount).length();
         for (int i = 1; i <= lineCount; i++) {
             String lineStr = Integer.toString(i);
             int leadingSpaces = digits - lineStr.length();
             if (leadingSpaces == 0) {
-                lineNumberList.append(lineStr + "&nbsp;<br>");
+                lineNumberList.append(lineStr).append("&nbsp;<br>");
             } else {
-                lineNumberList.append(spaces.substring(0, leadingSpaces * 6) + lineStr + "&nbsp;<br>");
+                lineNumberList.append(spaces, 0, leadingSpaces * 6).append(lineStr).append("&nbsp;<br>");
             }
         }
         lineNumberList.append("<br></html>");
@@ -252,7 +250,7 @@ public class EditPane extends JPanel implements Observer {
             while (bufStringReader.readLine() != null) {
                 lineNums++;
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         return lineNums;
     }
@@ -271,7 +269,7 @@ public class EditPane extends JPanel implements Observer {
      * Set the editing status for this EditPane's associated document.
      * For the argument, use one of the constants from class FileStatus.
      *
-     * @param FileStatus the status constant from class FileStatus
+     * @param fileStatus the status constant from class FileStatus
      */
     public void setFileStatus(int fileStatus) {
         this.fileStatus.setFileStatus(fileStatus);
@@ -436,7 +434,7 @@ public class EditPane extends JPanel implements Observer {
     /**
      * enable or disable checkbox that controls display of line numbers
      *
-     * @param enable True to enable box, false to disable.
+     * @param enabled True to enable box, false to disable.
      */
     public void setShowLineNumbersEnabled(boolean enabled) {
         showLineNumbers.setEnabled(enabled);
@@ -463,15 +461,15 @@ public class EditPane extends JPanel implements Observer {
         caretPositionLabel.setText("Line: " + p.y + " Column: " + p.x);
     }
 
+    private static final char newline = '\n';
+
     /**
      * Given byte stream position in text being edited, calculate its column and line
      * number coordinates.
      *
-     * @param stream position of character
+     * @param position position of character
      * @return position Its column and line number coordinate as a Point.
      */
-    private static final char newline = '\n';
-
     public Point convertStreamPositionToLineColumn(int position) {
         String textStream = sourceCode.getText();
         int line = 1;

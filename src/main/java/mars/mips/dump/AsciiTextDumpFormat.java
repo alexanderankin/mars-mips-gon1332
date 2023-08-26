@@ -5,6 +5,7 @@ import mars.Globals;
 import mars.mips.hardware.*;
 
 import java.io.*;
+import java.nio.file.Files;
 /*
 Copyright (c) 2003-2011,  Pete Sanderson and Kenneth Vollmar
 
@@ -76,17 +77,13 @@ public class AsciiTextDumpFormat extends AbstractDumpFormat {
      */
     public void dumpMemoryRange(File file, int firstAddress, int lastAddress)
             throws AddressErrorException, IOException {
-        PrintStream out = new PrintStream(new FileOutputStream(file));
-        String string = null;
-        try {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(file.toPath()))) {
             for (int address = firstAddress; address <= lastAddress; address += Memory.WORD_LENGTH_BYTES) {
                 Integer temp = Globals.memory.getRawWordOrNull(address);
                 if (temp == null)
                     break;
-                out.println(Binary.intToAscii(temp.intValue()));
+                out.println(Binary.intToAscii(temp));
             }
-        } finally {
-            out.close();
         }
     }
 

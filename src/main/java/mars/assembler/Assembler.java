@@ -3,6 +3,7 @@ package mars.assembler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import mars.ErrorList;
 import mars.ErrorMessage;
@@ -56,14 +57,12 @@ import mars.util.SystemIO;
  **/
 
 public class Assembler {
-    private ArrayList machineList;
     private ErrorList errors;
     private boolean inDataSegment; // status maintained by parser
     private boolean inMacroSegment; // status maintained by parser, true if in
     // macro definition segment
     private int externAddress;
     private boolean autoAlign;
-    private Directives currentDirective;
     private Directives dataDirective;
     private MIPSprogram fileCurrentlyBeingAssembled;
     private TokenList globalDeclarationList;
@@ -86,7 +85,7 @@ public class Assembler {
      * statement.
      * @see ProgramStatement
      **/
-    public ArrayList assemble(MIPSprogram p, boolean extendedAssemblerEnabled)
+    public List<ProgramStatement> assemble(MIPSprogram p, boolean extendedAssemblerEnabled)
             throws ProcessingException {
         return assemble(p, extendedAssemblerEnabled, false);
     }
@@ -109,11 +108,9 @@ public class Assembler {
      * statement.
      * @see ProgramStatement
      **/
-    public ArrayList assemble(MIPSprogram p, boolean extendedAssemblerEnabled,
+    public List<ProgramStatement> assemble(MIPSprogram p, boolean extendedAssemblerEnabled,
                               boolean warningsAreErrors) throws ProcessingException {
-        ArrayList programFiles = new ArrayList();
-        programFiles.add(p);
-        return this.assemble(programFiles, extendedAssemblerEnabled, warningsAreErrors);
+        return this.assemble(new ArrayList<>(Collections.singletonList(p)), extendedAssemblerEnabled, warningsAreErrors);
     }
 
     /**
@@ -141,7 +138,7 @@ public class Assembler {
      * statement. Returns null if incoming array list is null or empty.
      * @see ProgramStatement
      **/
-    public ArrayList assemble(ArrayList tokenizedProgramFiles, boolean extendedAssemblerEnabled)
+    public List<ProgramStatement> assemble(List<MIPSprogram> tokenizedProgramFiles, boolean extendedAssemblerEnabled)
             throws ProcessingException {
         return assemble(tokenizedProgramFiles, extendedAssemblerEnabled, false);
     }
@@ -165,8 +162,8 @@ public class Assembler {
      * statement. Returns null if incoming array list is null or empty.
      * @see ProgramStatement
      **/
-    public ArrayList assemble(ArrayList tokenizedProgramFiles, boolean extendedAssemblerEnabled,
-                              boolean warningsAreErrors) throws ProcessingException {
+    public List<ProgramStatement> assemble(List<MIPSprogram> tokenizedProgramFiles, boolean extendedAssemblerEnabled,
+                                           boolean warningsAreErrors) throws ProcessingException {
 
         if (tokenizedProgramFiles == null || tokenizedProgramFiles.size() == 0)
             return null;
@@ -179,7 +176,7 @@ public class Assembler {
         accumulatedDataSegmentForwardReferences = new DataSegmentForwardReferences();
         Globals.symbolTable.clear();
         Globals.memory.clear();
-        this.machineList = new ArrayList();
+        List<ProgramStatement> machineList = new ArrayList<>();
         this.errors = new ErrorList();
         if (Globals.debug)
             System.out.println("Assembler first pass begins:");
@@ -187,10 +184,10 @@ public class Assembler {
         // TO SECOND PASS. THIS ASSURES ALL SYMBOL TABLES ARE CORRECTLY BUILT.
         // THERE IS ONE GLOBAL SYMBOL TABLE (for identifiers declared .globl) PLUS
         // ONE LOCAL SYMBOL TABLE FOR EACH SOURCE FILE.
-        for (int fileIndex = 0; fileIndex < tokenizedProgramFiles.size(); fileIndex++) {
+        for (MIPSprogram programFile : tokenizedProgramFiles) {
             if (errors.errorLimitExceeded())
                 break;
-            this.fileCurrentlyBeingAssembled = (MIPSprogram) tokenizedProgramFiles.get(fileIndex);
+            this.fileCurrentlyBeingAssembled = programFile;
             // List of labels declared ".globl". new list for each file assembled
             this.globalDeclarationList = new TokenList();
             // Parser begins by default in text segment until directed otherwise.
@@ -209,22 +206,22 @@ public class Assembler {
             // tokenList is an ArrayList of TokenList objects, one per source line;
             // each ArrayList in tokenList consists of Token objects.
             ArrayList<SourceLine> sourceLineList = fileCurrentlyBeingAssembled.getSourceLineList();
-            ArrayList tokenList = fileCurrentlyBeingAssembled.getTokenList();
-            ArrayList parsedList = fileCurrentlyBeingAssembled.createParsedList();
+            List<TokenList> tokenList = fileCurrentlyBeingAssembled.getTokenList();
+            List<ProgramStatement> parsedList = fileCurrentlyBeingAssembled.createParsedList();
             // each file keeps its own macro definitions
-            MacroPool macroPool = fileCurrentlyBeingAssembled.createMacroPool();
+            fileCurrentlyBeingAssembled.createMacroPool();
             // FIRST PASS OF ASSEMBLER VERIFIES SYNTAX, GENERATES SYMBOL TABLE,
             // INITIALIZES DATA SEGMENT
             ArrayList<ProgramStatement> statements;
             for (int i = 0; i < tokenList.size(); i++) {
                 if (errors.errorLimitExceeded())
                     break;
-                for (int z = 0; z < ((TokenList) tokenList.get(i)).size(); z++) {
-                    Token t = ((TokenList) tokenList.get(i)).get(z);
+                for (int z = 0; z < tokenList.get(i).size(); z++) {
+                    Token t = tokenList.get(i).get(z);
                     // record this token's original source program and line #. Differs from final, if .include used
                     t.setOriginal(sourceLineList.get(i).getMIPSprogram(), sourceLineList.get(i).getLineNumber());
                 }
-                statements = this.parseLine((TokenList) tokenList.get(i),
+                statements = this.parseLine(tokenList.get(i),
                         sourceLineList.get(i).getSource(),
                         sourceLineList.get(i).getLineNumber(),
                         extendedAssemblerEnabled);
@@ -265,20 +262,20 @@ public class Assembler {
             System.out.println("Assembler second pass begins");
         // SECOND PASS OF ASSEMBLER GENERATES BASIC ASSEMBLER THEN MACHINE CODE.
         // Generates basic assembler statements...
-        for (int fileIndex = 0; fileIndex < tokenizedProgramFiles.size(); fileIndex++) {
+        for (MIPSprogram tokenizedProgramFile : tokenizedProgramFiles) {
             if (errors.errorLimitExceeded())
                 break;
-            this.fileCurrentlyBeingAssembled = (MIPSprogram) tokenizedProgramFiles.get(fileIndex);
-            ArrayList parsedList = fileCurrentlyBeingAssembled.getParsedList();
+            this.fileCurrentlyBeingAssembled = tokenizedProgramFile;
+            List<ProgramStatement> parsedList = fileCurrentlyBeingAssembled.getParsedList();
             ProgramStatement statement;
-            for (int i = 0; i < parsedList.size(); i++) {
-                statement = (ProgramStatement) parsedList.get(i);
+            for (ProgramStatement programStatement : parsedList) {
+                statement = programStatement;
                 statement.buildBasicStatementFromBasicInstruction(errors);
                 if (errors.errorsOccurred()) {
                     throw new ProcessingException(errors);
                 }
                 if (statement.getInstruction() instanceof BasicInstruction) {
-                    this.machineList.add(statement);
+                    machineList.add(statement);
                 } else {
                     // It is a pseudo-instruction:
                     // 1. Fetch its basic instruction template list
@@ -309,7 +306,7 @@ public class Assembler {
 
                     // ////////////////////////////////////////////////////////////////////////////
                     // If we are using compact memory config and there is a compact expansion, use it
-                    ArrayList templateList;
+                    List<String> templateList;
                     if (compactTranslationCanBeApplied(statement)) {
                         templateList = inst.getCompactBasicIntructionTemplateList();
                     } else {
@@ -322,12 +319,12 @@ public class Assembler {
                     for (int instrNumber = 0; instrNumber < templateList.size(); instrNumber++) {
                         String instruction = ExtendedInstruction.makeTemplateSubstitutions(
                                 this.fileCurrentlyBeingAssembled,
-                                (String) templateList.get(instrNumber), theTokenList);
+                                templateList.get(instrNumber), theTokenList);
                         // 23 Jan 2008 by DPS. Template substitution may result in no instruction.
                         // If this is the case, skip remainder of loop iteration. This should only
                         // happen if template substitution was for "nop" instruction but delayed branching
                         // is disabled so the "nop" is not generated.
-                        if (instruction == null || instruction == "") {
+                        if (instruction == null || instruction.isEmpty()) {
                             continue;
                         }
 
@@ -339,7 +336,7 @@ public class Assembler {
                         // statement, add to list.
                         TokenList newTokenList = new Tokenizer().tokenizeLine(sourceLine,
                                 instruction, errors, false);
-                        ArrayList instrMatches = this.matchInstruction(newTokenList.get(0));
+                        List<Instruction> instrMatches = this.matchInstruction(newTokenList.get(0));
                         Instruction instr = OperandFormat.bestOperandMatch(newTokenList,
                                 instrMatches);
                         // Only first generated instruction is linked to original source
@@ -349,7 +346,7 @@ public class Assembler {
                                 newTokenList, instr, textAddress.get(), statement.getSourceLine());
                         textAddress.increment(Instruction.INSTRUCTION_LENGTH);
                         ps.buildBasicStatementFromBasicInstruction(errors);
-                        this.machineList.add(ps);
+                        machineList.add(ps);
                     } // end of FOR loop, repeated for each template in list.
                 } // end of ELSE part for extended instruction.
 
@@ -361,10 +358,10 @@ public class Assembler {
         // Generates machine code statements from the list of basic assembler statements
         // and writes the statement to memory.
         ProgramStatement statement;
-        for (int i = 0; i < this.machineList.size(); i++) {
+        for (ProgramStatement programStatement : machineList) {
             if (errors.errorLimitExceeded())
                 break;
-            statement = (ProgramStatement) this.machineList.get(i);
+            statement = programStatement;
             statement.buildMachineStatementFromBasicStatement(errors);
             if (Globals.debug)
                 System.out.println(statement);
@@ -389,21 +386,21 @@ public class Assembler {
         // Such occurances will be flagged as errors.
         // Yes, I would not have to sort here if I used SortedSet rather than ArrayList
         // but in case of duplicate I like having both statements handy for error message.
-        Collections.sort(this.machineList, new ProgramStatementComparator());
-        catchDuplicateAddresses(this.machineList, errors);
+        Collections.sort(machineList, new ProgramStatementComparator());
+        catchDuplicateAddresses(machineList, errors);
         if (errors.errorsOccurred() || errors.warningsOccurred() && warningsAreErrors) {
             throw new ProcessingException(errors);
         }
-        return this.machineList;
+        return machineList;
     } // assemble()
 
     // //////////////////////////////////////////////////////////////////////
     // Will check for duplicate text addresses, which can happen inadvertantly when using
     // operand on .text directive. Will generate error message for each one that occurs.
-    private void catchDuplicateAddresses(ArrayList instructions, ErrorList errors) {
+    private void catchDuplicateAddresses(List<ProgramStatement> instructions, ErrorList errors) {
         for (int i = 0; i < instructions.size() - 1; i++) {
-            ProgramStatement ps1 = (ProgramStatement) instructions.get(i);
-            ProgramStatement ps2 = (ProgramStatement) instructions.get(i + 1);
+            ProgramStatement ps1 = instructions.get(i);
+            ProgramStatement ps2 = instructions.get(i + 1);
             if (ps1.getAddress() == ps2.getAddress()) {
                 errors.add(new ErrorMessage(ps2.getSourceMIPSprogram(), ps2.getSourceLine(), 0,
                         "Duplicate text segment address: "
@@ -466,7 +463,7 @@ public class Assembler {
         TokenList parenFreeTokens = tokens;
         if (tokens.size() > 2 && tokens.get(1).getType() == TokenTypes.LEFT_PAREN
             && tokens.get(tokens.size() - 1).getType() == TokenTypes.RIGHT_PAREN) {
-            parenFreeTokens = (TokenList) tokens.clone();
+            parenFreeTokens = tokens.copy();
             parenFreeTokens.remove(tokens.size() - 1);
             parenFreeTokens.remove(1);
         }
@@ -559,7 +556,7 @@ public class Assembler {
         // is not
         // yet implemented.
         if (!this.inDataSegment) {
-            ArrayList instrMatches = this.matchInstruction(token);
+            List<Instruction> instrMatches = this.matchInstruction(token);
             if (instrMatches == null)
                 return ret;
             // OK, we've got an operator match, let's check the operands.
@@ -578,7 +575,7 @@ public class Assembler {
                 // Modified to permit use of compact expansion if address fits
                 // in 15 bits. DPS 4-Aug-2009
                 int instLength = inst.getInstructionLength();
-                if (compactTranslationCanBeApplied(programStatement)) {
+                if (compactTranslationCanBeApplied(programStatement) && inst instanceof ExtendedInstruction) {
                     instLength = ((ExtendedInstruction) inst).getCompactInstructionLength();
                 }
                 textAddress.increment(instLength);
@@ -594,7 +591,7 @@ public class Assembler {
             current.addLabel(tokens.get(0).getValue());
     }
 
-    // Determine whether or not a compact (16-bit) translation from
+    // Determine Whether a compact (16-bit) translation from
     // pseudo-instruction to basic instruction can be applied. If
     // the argument is a basic instruction, obviously not. If an
     // extended instruction, we have to be operating under a 16-bit
@@ -613,7 +610,7 @@ public class Assembler {
     private TokenList stripComment(TokenList tokenList) {
         if (tokenList.isEmpty())
             return tokenList;
-        TokenList tokens = (TokenList) tokenList.clone();
+        TokenList tokens = tokenList.copy();
         // If there is a comment, strip it off.
         int last = tokens.size() - 1;
         if (tokens.get(last).getType() == TokenTypes.COMMENT) {
@@ -900,7 +897,7 @@ public class Assembler {
     // //////////////////////////////////////////////////////////////////////////////////
     // Given token, find the corresponding Instruction object. If token was not
     // recognized as OPERATOR, there is a problem.
-    private ArrayList matchInstruction(Token token) {
+    private List<Instruction> matchInstruction(Token token) {
         if (token.getType() != TokenTypes.OPERATOR) {
             if (token.getSourceMIPSprogram().getLocalMacroPool()
                     .matchesAnyMacroName(token.getValue()))
@@ -913,7 +910,7 @@ public class Assembler {
                                                                + "\" is not a recognized operator"));
             return null;
         }
-        ArrayList inst = Globals.instructionSet.matchOperator(token.getValue());
+        List<Instruction> inst = Globals.instructionSet.matchOperator(token.getValue());
         if (inst == null) { // This should NEVER happen...
             this.errors.add(new ErrorMessage(token.getSourceMIPSprogram(), token.getSourceLine(),
                     token.getStartPos(), "Internal Assembler error: \"" + token.getValue()
@@ -1195,7 +1192,7 @@ public class Assembler {
                         }
                     }
                     try {
-                        Globals.memory.set(this.dataAddress.get(), (int) theChar,
+                        Globals.memory.set(this.dataAddress.get(), theChar,
                                 DataTypes.CHAR_SIZE);
                     } catch (AddressErrorException e) {
                         errors.add(new ErrorMessage(token.getSourceMIPSprogram(), token
@@ -1375,7 +1372,7 @@ public class Assembler {
         private ArrayList forwardReferenceList;
 
         private DataSegmentForwardReferences() {
-            forwardReferenceList = new ArrayList();
+            forwardReferenceList = new ArrayList<>();
         }
 
         private int size() {
@@ -1434,8 +1431,8 @@ public class Assembler {
         // undefined labels.
         private void generateErrorMessages(ErrorList errors) {
             DataSegmentForwardReference entry;
-            for (int i = 0; i < forwardReferenceList.size(); i++) {
-                entry = (DataSegmentForwardReference) forwardReferenceList.get(i);
+            for (Object o : forwardReferenceList) {
+                entry = (DataSegmentForwardReference) o;
                 errors.add(new ErrorMessage(entry.token.getSourceMIPSprogram(), entry.token
                         .getSourceLine(), entry.token.getStartPos(), "Symbol \""
                                                                      + entry.token.getValue() + "\" not found in symbol table."));

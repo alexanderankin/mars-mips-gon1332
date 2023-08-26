@@ -53,7 +53,7 @@ public class SettingsMemoryConfigurationAction extends GuiAction {
     JTextField fontSizeDisplay;
     SettingsMemoryConfigurationAction thisAction;
 
-    // Used to determine upon OK, whether or not anything has changed.
+    // Used to determine upon OK, Whether anything has changed.
     String initialFontFamily, initialFontStyle, initialFontSize;
 
     /**

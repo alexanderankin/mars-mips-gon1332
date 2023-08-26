@@ -93,7 +93,7 @@ public class Coprocessor0Window extends JPanel implements Observer {
         for (int i = 0; i < registers.length; i++) {
             rowGivenRegNumber[registers[i].getNumber()] = i;
             tableData[i][0] = registers[i].getName();
-            tableData[i][1] = new Integer(registers[i].getNumber());
+            tableData[i][1] = (registers[i].getNumber());
             tableData[i][2] = NumberDisplayBaseChooser.formatNumber(registers[i].getValue(), NumberDisplayBaseChooser.getBase(settings.getDisplayValuesInHex()));
         }
         return tableData;
@@ -336,18 +336,9 @@ public class Coprocessor0Window extends JPanel implements Observer {
 
 
         // handy for debugging....
+        @SuppressWarnings("unused")
         private void printDebugData() {
-            int numRows = getRowCount();
-            int numCols = getColumnCount();
-
-            for (int i = 0; i < numRows; i++) {
-                System.out.print("    row " + i + ":");
-                for (int j = 0; j < numCols; j++) {
-                    System.out.print("  " + data[i][j]);
-                }
-                System.out.println();
-            }
-            System.out.println("--------------------------");
+            DebuggingUtils.printDebugData(getRowCount(), getColumnCount(), data);
         }
     }
 

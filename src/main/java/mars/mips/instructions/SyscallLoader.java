@@ -51,7 +51,7 @@ class SyscallLoader {
     private static final String SYSCALL_ABSTRACT = "AbstractSyscall.class";
     private static final String CLASS_EXTENSION = "class";
 
-    private ArrayList syscallList;
+    private List<Syscall> syscallList;
 
     /*
      *  Dynamically loads Syscalls into an ArrayList.  This method is adapted from
@@ -60,13 +60,12 @@ class SyscallLoader {
      *  in Java".  Also see the "loadMarsTools()" method from ToolLoader class.
      */
     void loadSyscalls() {
-        syscallList = new ArrayList();
+        List<Syscall> syscallList = new ArrayList<>();
         // grab all class files in the same directory as Syscall
-        ArrayList candidates = FilenameFinder.getFilenameList(this.getClass().getClassLoader(),
+        List<String> candidates = FilenameFinder.getFilenameList(this.getClass().getClassLoader(),
                 SYSCALLS_DIRECTORY_PATH, CLASS_EXTENSION);
-        HashMap syscalls = new HashMap();
-        for (int i = 0; i < candidates.size(); i++) {
-            String file = (String) candidates.get(i);
+        Map<String, String> syscalls = new HashMap<>();
+        for (String file : candidates) {
             // Do not add class if already encountered (happens if run in MARS development directory)
             if (syscalls.containsKey(file)) {
                 continue;
@@ -78,17 +77,17 @@ class SyscallLoader {
                 try {
                     // grab the class, make sure it implements Syscall, instantiate, add to list
                     String syscallClassName = CLASS_PREFIX + file.substring(0, file.indexOf(CLASS_EXTENSION) - 1);
-                    Class clas = Class.forName(syscallClassName);
+                    Class<?> clas = Class.forName(syscallClassName);
                     if (!Syscall.class.isAssignableFrom(clas)) {
                         continue;
                     }
-                    Syscall syscall = (Syscall) clas.newInstance();
-                    if (findSyscall(syscall.getNumber()) == null) {
+                    Syscall syscall = (Syscall) clas.getConstructor().newInstance();
+                    if (findSyscall(syscall.getNumber(), syscallList) == null) {
                         syscallList.add(syscall);
                     } else {
                         throw new Exception("Duplicate service number: " + syscall.getNumber() +
                                             " already registered to " +
-                                            findSyscall(syscall.getNumber()).getName());
+                                            findSyscall(syscall.getNumber(), syscallList).getName());
                     }
                 } catch (Exception e) {
                     System.out.println("Error instantiating Syscall from file " + file + ": " + e);
@@ -96,21 +95,18 @@ class SyscallLoader {
                 }
             }
         }
-        syscallList = processSyscallNumberOverrides(syscallList);
-        return;
+        this.syscallList = processSyscallNumberOverrides(syscallList);
     }
 
     // Will get any syscall number override specifications from MARS config file and
     // process them.  This will alter syscallList entry for affected names.
-    private ArrayList processSyscallNumberOverrides(ArrayList syscallList) {
-        ArrayList overrides = new Globals().getSyscallOverrides();
-        SyscallNumberOverride override;
+    private List<Syscall> processSyscallNumberOverrides(List<Syscall> syscallList) {
+        List<SyscallNumberOverride> overrides = new Globals().getSyscallOverrides();
         Syscall syscall;
-        for (int index = 0; index < overrides.size(); index++) {
-            override = (SyscallNumberOverride) overrides.get(index);
+        for (SyscallNumberOverride override : overrides) {
             boolean match = false;
             for (int i = 0; i < syscallList.size(); i++) {
-                syscall = (Syscall) syscallList.get(i);
+                syscall = syscallList.get(i);
                 if (override.getName().equals(syscall.getName())) {
                     // we have a match to service name, assign new number
                     syscall.setNumber(override.getNumber());
@@ -132,9 +128,9 @@ class SyscallLoader {
         Syscall syscallA, syscallB;
         boolean duplicates = false;
         for (int i = 0; i < syscallList.size(); i++) {
-            syscallA = (Syscall) syscallList.get(i);
+            syscallA = syscallList.get(i);
             for (int j = i + 1; j < syscallList.size(); j++) {
-                syscallB = (Syscall) syscallList.get(j);
+                syscallB = syscallList.get(j);
                 if (syscallA.getNumber() == syscallB.getNumber()) {
                     System.out.println("Error: syscalls " + syscallA.getName() + " and " +
                                        syscallB.getName() + " are both assigned same number " + syscallA.getNumber());
@@ -143,7 +139,7 @@ class SyscallLoader {
             }
         }
         if (duplicates) {
-            System.exit(0);
+            throw new UnsupportedOperationException("duplicate syscalls in SyscallLoader");
         }
         return syscallList;
     }
@@ -153,17 +149,19 @@ class SyscallLoader {
      * Returns null if no associated object found.
      */
     Syscall findSyscall(int number) {
+        return findSyscall(number, this.syscallList);
+    }
+
+    Syscall findSyscall(int number, List<Syscall> syscallList) {
         // linear search is OK since number of syscalls is small.
-        Syscall service, match = null;
         if (syscallList == null) {
-            loadSyscalls();
+            throw new RuntimeException("ok");
         }
-        for (int index = 0; index < syscallList.size(); index++) {
-            service = (Syscall) syscallList.get(index);
+        for (Syscall service : syscallList) {
             if (service.getNumber() == number) {
-                match = service;
+                return service;
             }
         }
-        return match;
+        return null;
     }
 }

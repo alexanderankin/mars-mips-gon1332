@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import javax.swing.plaf.basic.*;
 
 	/*
@@ -44,6 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /**
  * Action  for the File -> Save For Dump Memory menu item
  */
+@SuppressWarnings("FieldCanBeLocal")
 public class FileDumpMemoryAction extends GuiAction {
 
     private JDialog dumpDialog;
@@ -59,8 +61,8 @@ public class FileDumpMemoryAction extends GuiAction {
     private int[] segmentListBaseArray;
     private int[] segmentListHighArray;
 
-    private JComboBox segmentListSelector;
-    private JComboBox formatListSelector;
+    private JComboBox<String> segmentListSelector;
+    private JComboBox<DumpFormat> formatListSelector;
 
     public FileDumpMemoryAction(String name, Icon icon, String descrip,
                                 Integer mnemonic, KeyStroke accel, VenusUI gui) {
@@ -68,20 +70,17 @@ public class FileDumpMemoryAction extends GuiAction {
 
     }
 
-
     public void actionPerformed(ActionEvent e) {
         dumpMemory();
     }
 
     /* Save the memory segment in a supported format.
      */
-    private boolean dumpMemory() {
+    private void dumpMemory() {
         dumpDialog = createDumpDialog();
         dumpDialog.pack();
         dumpDialog.setLocationRelativeTo(Globals.getGui());
         dumpDialog.setVisible(true);
-        return true;
-        /////////////////////////////////////////////////////////////////////
     }
 
 
@@ -149,12 +148,7 @@ public class FileDumpMemoryAction extends GuiAction {
         if (segmentCount == 0) {
             contents.add(new Label("There is nothing to dump!"), BorderLayout.NORTH);
             JButton OKButton = new JButton("OK");
-            OKButton.addActionListener(
-                    new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            closeDialog();
-                        }
-                    });
+            OKButton.addActionListener(e -> closeDialog());
             contents.add(OKButton, BorderLayout.SOUTH);
             return contents;
         }
@@ -167,7 +161,7 @@ public class FileDumpMemoryAction extends GuiAction {
         }
 
         // Create segment selector.  First element selected by default.
-        segmentListSelector = new JComboBox(segmentListArray);
+        segmentListSelector = new JComboBox<>(segmentListArray);
         segmentListSelector.setSelectedIndex(0);
         JPanel segmentPanel = new JPanel(new BorderLayout());
         segmentPanel.add(new Label("Memory Segment"), BorderLayout.NORTH);
@@ -175,8 +169,8 @@ public class FileDumpMemoryAction extends GuiAction {
         contents.add(segmentPanel, BorderLayout.WEST);
 
         // Next, create list of all available dump formats.
-        ArrayList dumpFormats = (new DumpFormatLoader()).loadDumpFormats();
-        formatListSelector = new JComboBox(dumpFormats.toArray());
+        List<DumpFormat> dumpFormats = (new DumpFormatLoader()).loadDumpFormats();
+        formatListSelector = new JComboBox<>(new Vector<>(dumpFormats));
         formatListSelector.setRenderer(new DumpFormatComboBoxRenderer(formatListSelector));
         formatListSelector.setSelectedIndex(0);
         JPanel formatPanel = new JPanel(new BorderLayout());
@@ -198,12 +192,7 @@ public class FileDumpMemoryAction extends GuiAction {
                     }
                 });
         JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        closeDialog();
-                    }
-                });
+        cancelButton.addActionListener(e -> closeDialog());
         controlPanel.add(Box.createHorizontalGlue());
         controlPanel.add(dumpButton);
         controlPanel.add(Box.createHorizontalGlue());
@@ -216,8 +205,8 @@ public class FileDumpMemoryAction extends GuiAction {
     // User has clicked "Dump" button, so launch a file chooser then get
     // segment (memory range) and format selections and save to the file.
     private boolean performDump(int firstAddress, int lastAddress, DumpFormat format) {
-        File theFile = null;
-        JFileChooser saveDialog = null;
+        File theFile;
+        JFileChooser saveDialog;
         boolean operationOK = false;
 
         saveDialog = new JFileChooser(mainUI.getEditor().getCurrentSaveDirectory());
@@ -250,9 +239,7 @@ public class FileDumpMemoryAction extends GuiAction {
             if (operationOK) {
                 try {
                     format.dumpMemoryRange(theFile, firstAddress, lastAddress);
-                } catch (AddressErrorException aee) {
-
-                } catch (IOException ioe) {
+                } catch (AddressErrorException | IOException ignored) {
                 }
             }
         }
@@ -269,10 +256,10 @@ public class FileDumpMemoryAction extends GuiAction {
     // Display tool tip for dump format list items.  Got the technique from
     // http://forum.java.sun.com/thread.jspa?threadID=488762&messageID=2292482
 
-    private class DumpFormatComboBoxRenderer extends BasicComboBoxRenderer {
-        private JComboBox myMaster;
+    private static class DumpFormatComboBoxRenderer extends BasicComboBoxRenderer {
+        private final JComboBox<DumpFormat> myMaster;
 
-        public DumpFormatComboBoxRenderer(JComboBox myMaster) {
+        public DumpFormatComboBoxRenderer(JComboBox<DumpFormat> myMaster) {
             super();
             this.myMaster = myMaster;
         }
@@ -281,8 +268,8 @@ public class FileDumpMemoryAction extends GuiAction {
                                                       boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             setToolTipText(value.toString());
-            if (index >= 0 && ((DumpFormat) (myMaster.getItemAt(index))).getDescription() != null) {
-                setToolTipText(((DumpFormat) (myMaster.getItemAt(index))).getDescription());
+            if (index >= 0 && myMaster.getItemAt(index).getDescription() != null) {
+                setToolTipText(myMaster.getItemAt(index).getDescription());
             }
             return this;
         }

@@ -49,6 +49,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @author Sanderson
  **/
 
+@SuppressWarnings("FieldMayBeFinal")
 public class EditTabbedPane extends JTabbedPane {
     EditPane editTab;
     MainPane mainPane;
@@ -345,7 +346,7 @@ public class EditTabbedPane extends JTabbedPane {
                     saveDialog = new JFileChooser(editor.getCurrentSaveDirectory());
                 } else {
                     File f = new File(editPane.getPathname());
-                    if (f != null) {
+                    if (f.exists()) {
                         saveDialog = new JFileChooser(f.getParent());
                     } else {
                         saveDialog = new JFileChooser(editor.getCurrentSaveDirectory());
@@ -541,7 +542,7 @@ public class EditTabbedPane extends JTabbedPane {
             this.fileChooser.addPropertyChangeListener(this.listenForUserAddedFileFilter);
 
             // Note: add sequence is significant - last one added becomes default.
-            fileFilterList = new ArrayList();
+            fileFilterList = new ArrayList<>();
             fileFilterList.add(fileChooser.getAcceptAllFileFilter());
             fileFilterList.add(FilenameFinder.getFileFilter(Globals.fileExtensions, "Assembler Files", true));
             fileFilterCount = 0; // this will trigger fileChooser file filter load in next line

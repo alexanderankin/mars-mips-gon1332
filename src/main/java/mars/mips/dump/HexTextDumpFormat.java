@@ -4,6 +4,7 @@ import mars.Globals;
 import mars.mips.hardware.*;
 
 import java.io.*;
+import java.nio.file.Files;
 /*
 Copyright (c) 2003-2008,  Pete Sanderson and Kenneth Vollmar
 
@@ -68,21 +69,18 @@ public class HexTextDumpFormat extends AbstractDumpFormat {
      */
     public void dumpMemoryRange(File file, int firstAddress, int lastAddress)
             throws AddressErrorException, IOException {
-        PrintStream out = new PrintStream(new FileOutputStream(file));
-        String string = null;
-        try {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(file.toPath()))) {
+            StringBuilder string;
             for (int address = firstAddress; address <= lastAddress; address += Memory.WORD_LENGTH_BYTES) {
                 Integer temp = Globals.memory.getRawWordOrNull(address);
                 if (temp == null)
                     break;
-                string = Integer.toHexString(temp.intValue());
+                string = new StringBuilder(Integer.toHexString(temp));
                 while (string.length() < 8) {
-                    string = '0' + string;
+                    string.insert(0, '0');
                 }
                 out.println(string);
             }
-        } finally {
-            out.close();
         }
     }
 

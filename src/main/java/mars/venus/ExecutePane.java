@@ -40,6 +40,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @author Sanderson and Team JSpim
  **/
 
+@SuppressWarnings("FieldMayBeFinal")
 public class ExecutePane extends JDesktopPane {
     private RegistersWindow registerValues;
     private Coprocessor1Window coprocessor1Values;

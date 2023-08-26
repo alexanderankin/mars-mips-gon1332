@@ -1,9 +1,6 @@
 package mars.venus;
 
-import mars.*;
-
-import javax.swing.*;
-import java.io.*;
+import java.io.File;
 
  /*
 Copyright (c) 2003-2007,  Pete Sanderson and Kenneth Vollmar
@@ -38,6 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Currently only manages one file at a time, but can be expanded.
  */
 
+@SuppressWarnings("FieldMayBeFinal")
 public class Editor {
 
     public static final int MIN_TAB_SIZE = 1;

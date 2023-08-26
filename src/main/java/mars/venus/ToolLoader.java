@@ -5,9 +5,7 @@ import mars.util.*;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
-import java.util.zip.*;
 import java.lang.reflect.*;
 
 	/*
@@ -70,7 +68,7 @@ public class ToolLoader {
      */
     public JMenu buildToolsMenu() {
         JMenu menu = null;
-        ArrayList marsToolList = loadMarsTools();
+        List<MarsToolClassAndInstance> marsToolList = loadMarsTools();
         if (!marsToolList.isEmpty()) {
             menu = new JMenu(TOOLS_MENU_NAME);
             menu.setMnemonic(KeyEvent.VK_T);
@@ -103,9 +101,9 @@ public class ToolLoader {
      *  as a ZipFile, get the ZipEntry enumeration, find the class files in the tools
      *  folder, then continue as before.
      */
-    private ArrayList loadMarsTools() {
-        ArrayList toolList = new ArrayList();
-        ArrayList candidates = FilenameFinder.getFilenameList(this.getClass().getClassLoader(),
+    private List<MarsToolClassAndInstance> loadMarsTools() {
+        List<MarsToolClassAndInstance> toolList = new ArrayList<>();
+        List<String> candidates = FilenameFinder.getFilenameList(this.getClass().getClassLoader(),
                 TOOLS_DIRECTORY_PATH, CLASS_EXTENSION);
         // Add any tools stored externally, as listed in Config.properties file.
         // This needs some work, because mars.Globals.getExternalTools() returns
@@ -127,13 +125,16 @@ public class ToolLoader {
                 try {
                     // grab the class, make sure it implements MarsTool, instantiate, add to menu
                     String toolClassName = CLASS_PREFIX + file.substring(0, file.indexOf(CLASS_EXTENSION) - 1);
-                    Class clas = Class.forName(toolClassName);
+                    Class<?> clas = Class.forName(toolClassName);
                     if (!MarsTool.class.isAssignableFrom(clas) ||
                         Modifier.isAbstract(clas.getModifiers()) ||
                         Modifier.isInterface(clas.getModifiers())) {
                         continue;
                     }
-                    toolList.add(new MarsToolClassAndInstance(clas, (MarsTool) clas.newInstance()));
+                    // checked in if statement
+                    @SuppressWarnings("unchecked")
+                    Class<MarsTool> marsToolClass = (Class<MarsTool>) clas;
+                    toolList.add(new MarsToolClassAndInstance(marsToolClass, marsToolClass.getConstructor().newInstance()));
                 } catch (Exception e) {
                     System.out.println("Error instantiating MarsTool from file " + file + ": " + e);
                 }
@@ -143,11 +144,11 @@ public class ToolLoader {
     }
 
 
-    private class MarsToolClassAndInstance {
-        Class marsToolClass;
+    private static class MarsToolClassAndInstance {
+        Class<MarsTool> marsToolClass;
         MarsTool marsToolInstance;
 
-        MarsToolClassAndInstance(Class marsToolClass, MarsTool marsToolInstance) {
+        MarsToolClassAndInstance(Class<MarsTool> marsToolClass, MarsTool marsToolInstance) {
             this.marsToolClass = marsToolClass;
             this.marsToolInstance = marsToolInstance;
         }

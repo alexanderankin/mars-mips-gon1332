@@ -1,6 +1,8 @@
 package mars.mips.instructions.syscalls;
 
 import mars.*;
+import mars.mips.hardware.AddressErrorException;
+import mars.mips.hardware.RegisterFile;
 /*
 Copyright (c) 2003-2006,  Pete Sanderson and Kenneth Vollmar
 
@@ -43,8 +45,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 public abstract class AbstractSyscall implements Syscall {
+    private final String serviceName;
     private int serviceNumber;
-    private String serviceName;
 
     /**
      * Constructor is provided so subclass may initialize instance variables.
@@ -69,16 +71,6 @@ public abstract class AbstractSyscall implements Syscall {
     }
 
     /**
-     * Set the service number.  This is provided to allow MARS implementer or user
-     * to override the default service number.
-     *
-     * @param num specified service number to override the default.
-     */
-    public void setNumber(int num) {
-        serviceNumber = num;
-    }
-
-    /**
      * Return the assigned service number.  This is the number the MIPS programmer
      * must store into $v0 before issuing the SYSCALL instruction.
      *
@@ -89,6 +81,16 @@ public abstract class AbstractSyscall implements Syscall {
     }
 
     /**
+     * Set the service number.  This is provided to allow MARS implementer or user
+     * to override the default service number.
+     *
+     * @param num specified service number to override the default.
+     */
+    public void setNumber(int num) {
+        serviceNumber = num;
+    }
+
+    /**
      * Performs syscall function.  It will be invoked when the service is invoked
      * at simulation time.  Service is identified by value stored in $v0.
      *
@@ -96,4 +98,25 @@ public abstract class AbstractSyscall implements Syscall {
      */
     public abstract void simulate(ProgramStatement statement)
             throws ProcessingException;
+
+    protected String getMessage(ProgramStatement statement) {
+        return getMessage(statement, 4);
+    }
+
+    protected String getMessage(ProgramStatement statement, int registerNumber) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int byteAddress = RegisterFile.getValue(registerNumber);
+        char ch;
+        try {
+            do {
+                ch = (char) Globals.memory.getByte(byteAddress);
+                stringBuilder.append(ch); // parameter to String constructor is a char[] array
+                byteAddress++;
+            } while (ch != 0);
+        } catch (AddressErrorException e) {
+            throw new ProcessingException(statement, e);
+        }
+        return stringBuilder.toString();
+    }
+
 }

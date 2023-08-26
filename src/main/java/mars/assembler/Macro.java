@@ -1,7 +1,6 @@
 package mars.assembler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import mars.ErrorList;
@@ -44,7 +43,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class Macro {
     private String name;
     private MIPSprogram program;
-    private ArrayList<String> labels;
+    private final ArrayList<String> labels;
 
     /**
      * first and last line number of macro definition. first line starts with
@@ -62,8 +61,8 @@ public class Macro {
         program = null;
         fromLine = toLine = 0;
         origFromLine = origToLine = 0;
-        args = new ArrayList<String>();
-        labels = new ArrayList<String>();
+        args = new ArrayList<>();
+        labels = new ArrayList<>();
     }
 
     public String getName() {
@@ -145,15 +144,13 @@ public class Macro {
      * Also appends "_M#" to all labels defined inside macro body where # is value of <code>counter</code>
      *
      * @param line    source line number in macro definition to be substituted
-     * @param args
      * @param counter unique macro expansion id
-     * @param errors
      * @return <code>line</code>-th line of source code, with substituted
      * arguments
      */
 
     public String getSubstitutedLine(int line, TokenList args, long counter, ErrorList errors) {
-        TokenList tokens = (TokenList) program.getTokenList().get(line - 1);
+        TokenList tokens = program.getTokenList().get(line - 1);
         String s = program.getSourceLine(line);
 
         for (int i = tokens.size() - 1; i >= 0; i--) {
@@ -186,20 +183,14 @@ public class Macro {
     /**
      * returns true if <code>value</code> is name of a label defined in this macro's body.
      *
-     * @param value
-     * @return
      */
     private boolean tokenIsMacroLabel(String value) {
         return (Collections.binarySearch(labels, value) >= 0);
     }
 
     /**
-     * replaces token <code>tokenToBeReplaced</code> which is occured in <code>source</code> with <code>substitute</code>.
+     * replaces token <code>tokenToBeReplaced</code> which is occurred in <code>source</code> with <code>substitute</code>.
      *
-     * @param source
-     * @param tokenToBeReplaced
-     * @param substitute
-     * @return
      */
 // Initially the position of the substitute was based on token position but that proved problematic
 // in that the source string does not always match the token list from which the token comes. The
@@ -215,9 +206,7 @@ public class Macro {
     /**
      * returns whether <code>tokenValue</code> is macro parameter or not
      *
-     * @param tokenValue
      * @param acceptSpimStyleParameters accepts SPIM-style parameters which begin with '$' if true
-     * @return
      */
     public static boolean tokenIsMacroParameter(String tokenValue, boolean acceptSpimStyleParameters) {
         if (acceptSpimStyleParameters) {

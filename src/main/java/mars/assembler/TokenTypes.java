@@ -71,7 +71,7 @@ public final class TokenTypes {
     public static final TokenTypes ERROR = new TokenTypes("ERROR");
     public static final TokenTypes MACRO_PARAMETER = new TokenTypes("MACRO_PARAMETER");
 
-    private String descriptor;
+    private final String descriptor;
 
     private TokenTypes() {
         // private ctor assures no objects can be created other than those above.
@@ -101,8 +101,7 @@ public final class TokenTypes {
 
     public static TokenTypes matchTokenType(String value) {
 
-        TokenTypes type = null;
-        // If it starts with single quote ('), it is a mal-formed character literal
+        // If it starts with single quote '\'', it is a mal-formed character literal
         // because a well-formed character literal was converted to string-ified
         // integer before getting here...
         if (value.charAt(0) == '\'')
@@ -154,7 +153,8 @@ public final class TokenTypes {
 
             int i = Binary.stringToInt(value);   // KENV 1/6/05
 
-            /***************************************************************************
+            /*
+             ***************************************************************************
              *  MODIFICATION AND COMMENT, DPS 3-July-2008
              *
              * The modifications of January 2005 documented below are being rescinded.

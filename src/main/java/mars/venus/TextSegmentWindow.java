@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 import javax.swing.table.*;
 import javax.swing.event.*;
 
@@ -110,7 +111,7 @@ public class TextSegmentWindow extends JInternalFrame implements Observer {
         int addressBase = Globals.getGui().getMainPane().getExecutePane().getAddressDisplayBase();
         codeHighlighting = true;
         breakpointsEnabled = true;
-        ArrayList sourceStatementList = Globals.program.getMachineList();
+        List<ProgramStatement> sourceStatementList = Globals.program.getMachineList();
         data = new Object[sourceStatementList.size()][columnNames.length];
         intAddresses = new int[data.length];
         addressRows = new Hashtable(data.length);
@@ -131,7 +132,7 @@ public class TextSegmentWindow extends JInternalFrame implements Observer {
         for (int i = 0; i < sourceStatementList.size(); i++) {
             ProgramStatement statement = (ProgramStatement) sourceStatementList.get(i);
             intAddresses[i] = statement.getAddress();
-            addressRows.put(new Integer(intAddresses[i]), new Integer(i));
+            addressRows.put((intAddresses[i]), (i));
             data[i][BREAK_COLUMN] = Boolean.FALSE;
             data[i][ADDRESS_COLUMN] = NumberDisplayBaseChooser.formatUnsignedInteger(statement.getAddress(), addressBase);
             data[i][CODE_COLUMN] = NumberDisplayBaseChooser.formatNumber(statement.getBinaryStatement(), 16);
@@ -268,7 +269,7 @@ public class TextSegmentWindow extends JInternalFrame implements Observer {
     public void updateBasicStatements() {
         if (contentPane.getComponentCount() == 0)
             return; // ignore if no content to change
-        ArrayList sourceStatementList = Globals.program.getMachineList();
+        List<ProgramStatement> sourceStatementList = Globals.program.getMachineList();
         for (int i = 0; i < sourceStatementList.size(); i++) {
             // Loop has been extended to cover self-modifying code.  If code at this memory location has been
             // modified at runtime, construct a ProgramStatement from the current address and binary code
@@ -669,7 +670,7 @@ public class TextSegmentWindow extends JInternalFrame implements Observer {
     private int findRowForAddress(int address) throws IllegalArgumentException {
         int addressRow = 0;
         try {
-            addressRow = ((Integer) addressRows.get(new Integer(address))).intValue();
+            addressRow = ((Integer) addressRows.get((address))).intValue();
         } catch (NullPointerException e) {
             throw new IllegalArgumentException(); // address not found in map
             // return addressRow;// if address not in map, do nothing.
@@ -774,19 +775,9 @@ public class TextSegmentWindow extends JInternalFrame implements Observer {
             return;
         }
 
-
+        @SuppressWarnings("unused")
         private void printDebugData() {
-            int numRows = getRowCount();
-            int numCols = getColumnCount();
-
-            for (int i = 0; i < numRows; i++) {
-                System.out.print("    row " + i + ":");
-                for (int j = 0; j < numCols; j++) {
-                    System.out.print("  " + data[i][j]);
-                }
-                System.out.println();
-            }
-            System.out.println("--------------------------");
+            DebuggingUtils.printDebugData(getRowCount(), getColumnCount(), data);
         }
     }
 

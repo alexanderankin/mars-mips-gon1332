@@ -38,7 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
- * Action class for the Settings menu item to control whether or not
+ * Action class for the Settings menu item to control Whether
  * program arguments can be entered and used.  If so, a text field
  * will be displayed where they can be interactively entered.
  */

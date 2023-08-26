@@ -38,7 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
- * Action class for the Settings menu item to control whether or not
+ * Action class for the Settings menu item to control Whether
  * assembler warnings are considered errors.  If so, a program generating
  * warnings but not errors will not assemble.
  */

@@ -3,6 +3,8 @@ package mars.mips.hardware;
 import mars.Globals;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /*
 Copyright (c) 2003-2009,  Pete Sanderson and Kenneth Vollmar
@@ -44,7 +46,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class MemoryConfigurations {
 
-    private static ArrayList configurations = null;
+    private static List<MemoryConfiguration> configurations;
+    private static Map<String, MemoryConfiguration> configurationsByName;
     private static MemoryConfiguration defaultConfiguration;
     private static MemoryConfiguration currentConfiguration;
 
@@ -78,7 +81,7 @@ public class MemoryConfigurations {
     };
 
     // Default configuration comes from SPIM
-    private static int[] defaultConfigurationItemValues = {
+    private static final int[] defaultConfigurationItemValues = {
             0x00400000, // .text Base Address
             0x10000000, // Data Segment base address
             0x10000000, // .extern Base Address
@@ -103,7 +106,7 @@ public class MemoryConfigurations {
     };
 
     // Compact allows 16 bit addressing, data segment starts at 0
-    private static int[] dataBasedCompactConfigurationItemValues = {
+    private static final int[] dataBasedCompactConfigurationItemValues = {
             0x00003000, // .text Base Address
             0x00000000, // Data Segment base address
             0x00001000, // .extern Base Address
@@ -128,7 +131,7 @@ public class MemoryConfigurations {
     };
 
     // Compact allows 16 bit addressing, text segment starts at 0
-    private static int[] textBasedCompactConfigurationItemValues = {
+    private static final int[] textBasedCompactConfigurationItemValues = {
             0x00000000, // .text Base Address
             0x00001000, // Data Segment base address
             0x00001000, // .extern Base Address
@@ -157,13 +160,22 @@ public class MemoryConfigurations {
 
     }
 
+    public static List<MemoryConfiguration> getConfigurations() {
+        buildConfigurationCollection();
+        return configurations;
+    }
 
     public static void buildConfigurationCollection() {
         if (configurations == null) {
-            configurations = new ArrayList();
+            configurations = new ArrayList<>();
             configurations.add(new MemoryConfiguration("Default", "Default", configurationItemNames, defaultConfigurationItemValues));
             configurations.add(new MemoryConfiguration("CompactDataAtZero", "Compact, Data at Address 0", configurationItemNames, dataBasedCompactConfigurationItemValues));
             configurations.add(new MemoryConfiguration("CompactTextAtZero", "Compact, Text at Address 0", configurationItemNames, textBasedCompactConfigurationItemValues));
+
+            // also order by name
+            configurationsByName = configurations.stream()
+                    .collect(Collectors.toMap(MemoryConfiguration::getConfigurationName, Function.identity()));
+
             defaultConfiguration = (MemoryConfiguration) configurations.get(0);
             currentConfiguration = defaultConfiguration;
             // Get current config from settings
@@ -179,37 +191,24 @@ public class MemoryConfigurations {
         }
     }
 
-    public static Iterator getConfigurationsIterator() {
-        if (configurations == null) {
-            buildConfigurationCollection();
-        }
-        return configurations.iterator();
+    public static Iterator<MemoryConfiguration> getConfigurationsIterator() {
+        return getConfigurations().iterator();
 
     }
 
     public static MemoryConfiguration getConfigurationByName(String name) {
-        Iterator configurationsIterator = getConfigurationsIterator();
-        while (configurationsIterator.hasNext()) {
-            MemoryConfiguration config = (MemoryConfiguration) configurationsIterator.next();
-            if (name.equals(config.getConfigurationIdentifier())) {
-                return config;
-            }
-        }
-        return null;
+        buildConfigurationCollection();
+        return configurationsByName.get(name);
     }
 
 
     public static MemoryConfiguration getDefaultConfiguration() {
-        if (defaultConfiguration == null) {
-            buildConfigurationCollection();
-        }
+        buildConfigurationCollection();
         return defaultConfiguration;
     }
 
     public static MemoryConfiguration getCurrentConfiguration() {
-        if (currentConfiguration == null) {
-            buildConfigurationCollection();
-        }
+        buildConfigurationCollection();
         return currentConfiguration;
     }
 

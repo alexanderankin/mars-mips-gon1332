@@ -1,13 +1,8 @@
 package mars.venus;
 
-import mars.*;
-
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.io.*;
-import java.awt.print.*;
-import java.util.*;
 
  /*
 Copyright (c) 2003-2006,  Pete Sanderson and Kenneth Vollmar
@@ -56,6 +51,7 @@ public class FilePrintAction extends GuiAction {
      * @param e component triggering this call
      */
 
+    @SuppressWarnings("StringConcatenationInLoop")
     public void actionPerformed(ActionEvent e) {
         EditPane editPane = mainUI.getMainPane().getEditPane();
         if (editPane == null) return;
@@ -69,17 +65,16 @@ public class FilePrintAction extends GuiAction {
             return;
         }
         BufferedReader in = new BufferedReader(new StringReader(editPane.getSource()));
-        int lineNumberDigits = new Integer(editPane.getSourceLineCount()).toString().length();
+        int lineNumberDigits = String.valueOf(editPane.getSourceLineCount()).length();
         String line;
         String lineNumberString = "";
         int lineNumber = 0;
-        int numchars;
         try {
             line = in.readLine();
             while (line != null) {
                 if (editPane.showingLineNumbers()) {
                     lineNumber++;
-                    lineNumberString = new Integer(lineNumber).toString() + ": ";
+                    lineNumberString = (lineNumber) + ": ";
                     while (lineNumberString.length() < lineNumberDigits) {
                         lineNumberString = lineNumberString + " ";
                     }
@@ -90,8 +85,7 @@ public class FilePrintAction extends GuiAction {
             }
             in.close();
             out.close();
-        } catch (IOException ioe) {
+        } catch (IOException ignored) {
         }
-        return;
     }
 }

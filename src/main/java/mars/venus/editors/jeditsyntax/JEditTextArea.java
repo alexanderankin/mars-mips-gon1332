@@ -17,7 +17,6 @@ import javax.swing.event.*;
 import javax.swing.text.*;
 import javax.swing.undo.*;
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicMenuItemUI;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.awt.*;
@@ -2019,7 +2018,7 @@ public class JEditTextArea extends JComponent {
     public String getSyntaxSensitiveToolTipText(int x, int y) {
         String result = null;
         int line = this.yToLine(y);
-        ArrayList matches = getSyntaxSensitiveHelpAtLineOffset(line, this.xToOffset(line, x), true);
+        java.util.List<PopupHelpItem> matches = getSyntaxSensitiveHelpAtLineOffset(line, this.xToOffset(line, x), true);
         if (matches == null) {
             return null;
         }
@@ -2078,8 +2077,8 @@ public class JEditTextArea extends JComponent {
     // if exact is false.  The former is helpful for mouse-movement-based tool
     // tips (this is what you have).  The latter is helpful for caret-based tool
     // tips (this is what you can do).
-    private ArrayList getSyntaxSensitiveHelpAtLineOffset(int line, int offset, boolean exact) {
-        ArrayList matches = null;
+    private java.util.List<PopupHelpItem> getSyntaxSensitiveHelpAtLineOffset(int line, int offset, boolean exact) {
+        java.util.List<PopupHelpItem> matches = null;
         TokenMarker tokenMarker = this.getTokenMarker();
         if (tokenMarker != null) {
             Segment lineSegment = new Segment();
@@ -2135,7 +2134,7 @@ public class JEditTextArea extends JComponent {
         int lineStart = getLineStartOffset(line);
         int offset = Math.max(1, Math.min(getLineLength(line),
                 getCaretPosition() - lineStart));
-        ArrayList helpItems = getSyntaxSensitiveHelpAtLineOffset(line, offset, false);
+        java.util.List<PopupHelpItem> helpItems = getSyntaxSensitiveHelpAtLineOffset(line, offset, false);
         if (helpItems == null && popupMenu != null) {
             popupMenu.setVisible(false);
             popupMenu = null;

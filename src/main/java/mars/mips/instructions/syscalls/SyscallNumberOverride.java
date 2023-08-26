@@ -1,8 +1,5 @@
 package mars.mips.instructions.syscalls;
 
-import java.util.*;
-
-import mars.util.*;
 /*
 Copyright (c) 2003-2006,  Pete Sanderson and Kenneth Vollmar
 
@@ -38,8 +35,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 public class SyscallNumberOverride {
-    private String serviceName;
-    private int newServiceNumber;
+    private final String serviceName;
+    private final int newServiceNumber;
 
     /**
      * Constructor is called with two strings: service name and desired
@@ -58,8 +55,7 @@ public class SyscallNumberOverride {
         try {
             this.newServiceNumber = Integer.parseInt(value.trim());
         } catch (NumberFormatException e) {
-            System.out.println("Error processing Syscall number override: '" + value.trim() + "' is not a valid integer");
-            System.exit(0);
+            throw new RuntimeException("Error processing Syscall number override: '" + value.trim() + "' is not a valid integer");
         }
     }
 

@@ -56,7 +56,7 @@ public class SystemIO {
     /**
      * String used for description of file error
      */
-    public static String fileErrorString = new String("File operation OK");
+    public static String fileErrorString = "File operation OK";
 
     private static final int O_RDONLY = 0x00000000;
     private static final int O_WRONLY = 0x00000001;
@@ -88,7 +88,7 @@ public class SystemIO {
         if (Globals.getGui() == null) {
             try {
                 input = getInputReader().readLine();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         } else {
             if (Globals.getSettings().getBooleanSetting(Settings.POPUP_SYSCALL_INPUT)) {
@@ -100,7 +100,7 @@ public class SystemIO {
         }
 
         // Client is responsible for catching NumberFormatException
-        return new Integer(input.trim()).intValue();
+        return Integer.parseInt(input.trim());
     }
 
 
@@ -117,7 +117,7 @@ public class SystemIO {
         if (Globals.getGui() == null) {
             try {
                 input = getInputReader().readLine();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         } else {
             if (Globals.getSettings().getBooleanSetting(Settings.POPUP_SYSCALL_INPUT)) {
@@ -127,7 +127,7 @@ public class SystemIO {
                 input = Globals.getGui().getMessagesPane().getInputString(-1);
             }
         }
-        return new Float(input.trim()).floatValue();
+        return Float.parseFloat(input.trim());
 
     }
 
@@ -145,7 +145,7 @@ public class SystemIO {
         if (Globals.getGui() == null) {
             try {
                 input = getInputReader().readLine();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         } else {
             if (Globals.getSettings().getBooleanSetting(Settings.POPUP_SYSCALL_INPUT)) {
@@ -155,7 +155,7 @@ public class SystemIO {
                 input = Globals.getGui().getMessagesPane().getInputString(-1);
             }
         }
-        return new Double(input.trim()).doubleValue();
+        return Double.parseDouble(input.trim());
 
     }
 
@@ -185,7 +185,7 @@ public class SystemIO {
         if (Globals.getGui() == null) {
             try {
                 input = getInputReader().readLine();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         } else {
             if (Globals.getSettings().getBooleanSetting(Settings.POPUP_SYSCALL_INPUT)) {
@@ -221,7 +221,7 @@ public class SystemIO {
         if (Globals.getGui() == null) {
             try {
                 input = getInputReader().readLine();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         } else {
             if (Globals.getSettings().getBooleanSetting(Settings.POPUP_SYSCALL_INPUT)) {
@@ -235,7 +235,7 @@ public class SystemIO {
         // just propagating the runtime exception (the default behavior), but
         // I want to make it explicit.  The client needs to catch it.
         try {
-            returnValue = (int) (input.charAt(0)); // first character input
+            returnValue = input.charAt(0); // first character input
         } catch (IndexOutOfBoundsException e) // no chars present
         {
             throw e;  // was: returnValue = 0;
@@ -268,8 +268,7 @@ public class SystemIO {
 
         if (!FileIOData.fdInUse(fd, 1)) // Check the existence of the "write" fd
         {
-            fileErrorString = new String(
-                    "File descriptor " + fd + " is not open for writing");
+            fileErrorString = "File descriptor " + fd + " is not open for writing";
             return -1;
         }
         // retrieve FileOutputStream from storage
@@ -291,13 +290,11 @@ public class SystemIO {
                 outputStream.write(myBuffer[ii]);
             }
             outputStream.flush();// DPS 7-Jan-2013
-        } catch (IOException e) {
-            fileErrorString = new String(
-                    "IO Exception on write of file with fd " + fd);
+        } catch (IOException ignored) {
+            fileErrorString = "IO Exception on write of file with fd " + fd;
             return -1;
         } catch (IndexOutOfBoundsException e) {
-            fileErrorString = new String(
-                    "IndexOutOfBoundsException on write of file with fd" + fd);
+            fileErrorString = "IndexOutOfBoundsException on write of file with fd" + fd;
             return -1;
         }
 
@@ -332,8 +329,7 @@ public class SystemIO {
 
         if (!FileIOData.fdInUse(fd, 0)) // Check the existence of the "read" fd
         {
-            fileErrorString = new String(
-                    "File descriptor " + fd + " is not open for reading");
+            fileErrorString = "File descriptor " + fd + " is not open for reading";
             return -1;
         }
         // retrieve FileInputStream from storage
@@ -346,13 +342,11 @@ public class SystemIO {
             if (retValue == -1) {
                 retValue = 0;
             }
-        } catch (IOException e) {
-            fileErrorString = new String(
-                    "IO Exception on read of file with fd " + fd);
+        } catch (IOException ignored) {
+            fileErrorString = "IO Exception on read of file with fd " + fd;
             return -1;
         } catch (IndexOutOfBoundsException e) {
-            fileErrorString = new String(
-                    "IndexOutOfBoundsException on read of file with fd" + fd);
+            fileErrorString = "IndexOutOfBoundsException on read of file with fd" + fd;
             return -1;
         }
         return retValue;
@@ -365,7 +359,7 @@ public class SystemIO {
      * IMPLEMENTED.  Also note that file permission modes are also NOT IMPLEMENTED.
      *
      * @param filename string containing filename
-     * @param flag     0 for read, 1 for write
+     * @param flags    0 for read, 1 for write
      * @return file descriptor in the range 0 to SYSCALL_MAXFILES-1, or -1 if error
      * @author Ken Vollmar
      */
@@ -374,8 +368,7 @@ public class SystemIO {
         // of the filename, flag, and the File???putStream associated with
         // that file descriptor.
 
-        int retValue = -1;
-        char ch[] = {' '}; // Need an array to convert to String
+        int retValue;
         FileInputStream inputStream;
         FileOutputStream outputStream;
         int fdToUse;
@@ -395,8 +388,7 @@ public class SystemIO {
                 inputStream = new FileInputStream(filename);
                 FileIOData.setStreamInUse(fdToUse, inputStream); // Save stream for later use
             } catch (FileNotFoundException e) {
-                fileErrorString = new String(
-                        "File " + filename + " not found, open for input.");
+                fileErrorString = "File " + filename + " not found, open for input.";
                 retValue = -1;
             }
         } else if ((flags & O_WRONLY) != 0) // Open for writing only
@@ -406,8 +398,7 @@ public class SystemIO {
                 outputStream = new FileOutputStream(filename, ((flags & O_APPEND) != 0));
                 FileIOData.setStreamInUse(fdToUse, outputStream); // Save stream for later use
             } catch (FileNotFoundException e) {
-                fileErrorString = new String(
-                        "File " + filename + " not found, open for output.");
+                fileErrorString = "File " + filename + " not found, open for output.";
                 retValue = -1;
             }
         }
@@ -459,9 +450,9 @@ public class SystemIO {
     // Ken Vollmar, August 2005
 
     private static class FileIOData {
-        private static String[] fileNames = new String[SYSCALL_MAXFILES]; // The filenames in use. Null if file descriptor i is not in use.
-        private static int[] fileFlags = new int[SYSCALL_MAXFILES]; // The flags of this file, 0=READ, 1=WRITE. Invalid if this file descriptor is not in use.
-        private static Object[] streams = new Object[SYSCALL_MAXFILES]; // The streams in use, associated with the filenames
+        private static final String[] fileNames = new String[SYSCALL_MAXFILES]; // The filenames in use. Null if file descriptor i is not in use.
+        private static final int[] fileFlags = new int[SYSCALL_MAXFILES]; // The flags of this file, 0=READ, 1=WRITE. Invalid if this file descriptor is not in use.
+        private static final Object[] streams = new Object[SYSCALL_MAXFILES]; // The streams in use, associated with the filenames
 
         // Reset all file information. Closes any open files and resets the arrays
         private static void resetFiles() {
@@ -514,6 +505,7 @@ public class SystemIO {
         }
 
         // Determine whether a given fd is already in use with the given flag.
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         private static boolean fdInUse(int fd, int flag) {
             if (fd < 0 || fd >= SYSCALL_MAXFILES) {
                 return false;
@@ -559,16 +551,14 @@ public class SystemIO {
         private static int nowOpening(String filename, int flag) {
             int i = 0;
             if (filenameInUse(filename)) {
-                fileErrorString = new String(
-                        "File name " + filename + " is already open.");
+                fileErrorString = "File name " + filename + " is already open.";
                 return -1;
             }
 
             if (flag != O_RDONLY && flag != O_WRONLY && flag != (O_WRONLY | O_APPEND)) // Only read and write are implemented
             {
-                fileErrorString = new String(
-                        "File name " + filename
-                        + " has unknown requested opening flag");
+                fileErrorString = "File name " + filename
+                                  + " has unknown requested opening flag";
                 return -1;
             }
 
@@ -578,17 +568,16 @@ public class SystemIO {
 
             if (i >= SYSCALL_MAXFILES) // no available file descriptors
             {
-                fileErrorString = new String(
-                        "File name " + filename
-                        + " exceeds maximum open file limit of "
-                        + SYSCALL_MAXFILES);
+                fileErrorString = "File name " + filename
+                                  + " exceeds maximum open file limit of "
+                                  + SYSCALL_MAXFILES;
                 return -1;
             }
 
             // Must be OK -- put filename in table
-            fileNames[i] = new String(filename); // our table has its own copy of filename
+            fileNames[i] = filename; // our table has its own copy of filename
             fileFlags[i] = flag;
-            fileErrorString = new String("File operation OK");
+            fileErrorString = "File operation OK";
             return i;
 
         }

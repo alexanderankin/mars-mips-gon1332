@@ -53,7 +53,7 @@ public class SettingsEditorAction extends GuiAction {
     JSlider tabSizeSelector;
     JTextField fontSizeDisplay;
 
-    // Used to determine upon OK, whether or not anything has changed.
+    // Used to determine upon OK, Whether anything has changed.
     String initialFontFamily, initialFontStyle, initialFontSize;
 
     /**
@@ -262,10 +262,10 @@ public class SettingsEditorAction extends GuiAction {
         // Perform reset on miscellaneous editor settings
         private void resetOtherSettings() {
             tabSizeSelector.setValue(initialEditorTabSize);
-            tabSizeSpinSelector.setValue(new Integer(initialEditorTabSize));
+            tabSizeSpinSelector.setValue((initialEditorTabSize));
             lineHighlightCheck.setSelected(initialLineHighlighting);
             autoIndentCheck.setSelected(initialAutoIndent);
-            blinkRateSpinSelector.setValue(new Integer(initialCaretBlinkRate));
+            blinkRateSpinSelector.setValue((initialCaretBlinkRate));
             blinkCaret.setBlinkRate(initialCaretBlinkRate);
             popupGuidanceOptions[initialPopupGuidance].setSelected(true);
         }
@@ -281,7 +281,7 @@ public class SettingsEditorAction extends GuiAction {
             tabSizeSelector.addChangeListener(
                     new ChangeListener() {
                         public void stateChanged(ChangeEvent e) {
-                            Integer value = new Integer(((JSlider) e.getSource()).getValue());
+                            Integer value = (((JSlider) e.getSource()).getValue());
                             tabSizeSpinSelector.setValue(value);
                         }
                     });

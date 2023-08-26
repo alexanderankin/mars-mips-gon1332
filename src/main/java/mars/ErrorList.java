@@ -39,7 +39,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  **/
 
 public class ErrorList {
-    private ArrayList messages;
+    private ArrayList<ErrorMessage> messages;
     private int errorCount;
     private int warningCount;
     public static final String ERROR_MESSAGE_PREFIX = "Error";
@@ -55,7 +55,7 @@ public class ErrorList {
      **/
 
     public ErrorList() {
-        messages = new ArrayList();
+        messages = new ArrayList<>();
         errorCount = 0;
         warningCount = 0;
     }
@@ -65,7 +65,7 @@ public class ErrorList {
      *
      * @return ArrayList of ErrorMessage objects
      */
-    public ArrayList getErrorMessages() {
+    public List<ErrorMessage> getErrorMessages() {
         return messages;
     }
 
@@ -190,10 +190,9 @@ public class ErrorList {
 
     // Produces either error or warning report.
     private String generateReport(boolean isWarning) {
-        StringBuffer report = new StringBuffer("");
+        StringBuilder report = new StringBuilder();
         String reportLine;
-        for (int i = 0; i < messages.size(); i++) {
-            ErrorMessage m = (ErrorMessage) messages.get(i);
+        for (ErrorMessage m : messages) {
             if ((isWarning && m.isWarning()) || (!isWarning && !m.isWarning())) {
                 reportLine = ((isWarning) ? WARNING_MESSAGE_PREFIX : ERROR_MESSAGE_PREFIX) + FILENAME_PREFIX;
                 if (m.getFilename().length() > 0)

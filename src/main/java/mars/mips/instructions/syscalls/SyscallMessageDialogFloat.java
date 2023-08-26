@@ -1,8 +1,6 @@
 package mars.mips.instructions.syscalls;
 
-import mars.util.*;
 import mars.mips.hardware.*;
-import mars.simulator.*;
 import mars.*;
 
 import javax.swing.JOptionPane;
@@ -56,20 +54,7 @@ public class SyscallMessageDialogFloat extends AbstractSyscall {
         //   $f12 = float value to display in string form after the first message
         // Output: none
 
-        String message = new String(); // = "";
-        int byteAddress = RegisterFile.getValue(4);
-        char ch[] = {' '}; // Need an array to convert to String
-        try {
-            ch[0] = (char) Globals.memory.getByte(byteAddress);
-            while (ch[0] != 0) // only uses single location ch[0]
-            {
-                message = message.concat(new String(ch)); // parameter to String constructor is a char[] array
-                byteAddress++;
-                ch[0] = (char) Globals.memory.getByte(byteAddress);
-            }
-        } catch (AddressErrorException e) {
-            throw new ProcessingException(statement, e);
-        }
+        String message = getMessage(statement);
 
 
         // Display the dialog.

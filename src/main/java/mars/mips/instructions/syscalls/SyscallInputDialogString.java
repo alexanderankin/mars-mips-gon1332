@@ -1,8 +1,6 @@
 package mars.mips.instructions.syscalls;
 
-import mars.util.*;
 import mars.mips.hardware.*;
-import mars.simulator.*;
 import mars.*;
 
 import javax.swing.JOptionPane;
@@ -63,28 +61,14 @@ public class SyscallInputDialogString extends AbstractSyscall {
         //       -3: OK was chosen but no data had been input into field
 
 
-        String message = new String(); // = "";
-        int byteAddress = RegisterFile.getValue(4); // byteAddress of string is in $a0
-        char ch[] = {' '}; // Need an array to convert to String
-        try {
-            ch[0] = (char) Globals.memory.getByte(byteAddress);
-            while (ch[0] != 0) // only uses single location ch[0]
-            {
-                message = message.concat(new String(ch)); // parameter to String constructor is a char[] array
-                byteAddress++;
-                ch[0] = (char) Globals.memory.getByte(byteAddress);
-            }
-        } catch (AddressErrorException e) {
-            throw new ProcessingException(statement, e);
-        }
+        String message = getMessage(statement);
 
         // Values returned by Java's InputDialog:
         // A null return value means that "Cancel" was chosen rather than OK.
         // An empty string returned (that is, inputString.length() of zero)
         // means that OK was chosen but no string was input.
-        String inputString = null;
-        inputString = JOptionPane.showInputDialog(message);
-        byteAddress = RegisterFile.getValue(5); // byteAddress of string is in $a1
+        String inputString = JOptionPane.showInputDialog(message);
+        int byteAddress = RegisterFile.getValue(5); // byteAddress of string is in $a1
         int maxLength = RegisterFile.getValue(6); // input buffer size for input string is in $a2
 
         try {

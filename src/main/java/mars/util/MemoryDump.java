@@ -3,13 +3,6 @@ package mars.util;
 import mars.Globals;
 import mars.mips.hardware.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.*;
-
 	/*
 Copyright (c) 2003-2009,  Pete Sanderson and Kenneth Vollmar
 
@@ -39,20 +32,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 public class MemoryDump {
-
-    /**
-     * A list of segmentname/dumpformat/filename triples which should be dumped
-     */
-    public static ArrayList dumpTriples = null;
-
-    /**
-     * A mapping from segments names (like ".text") to the base and limit for that segment.
-     */
-    private static final HashMap segmentBoundMap = new HashMap();
-
     private static final String[] segmentNames = {".text", ".data"};
-    private static int[] baseAddresses = new int[2];
-    private static int[] limitAddresses = new int[2];
+    private static final int[] baseAddresses = new int[2];
+    private static final int[] limitAddresses = new int[2];
 
 
     /**
@@ -67,8 +49,8 @@ public class MemoryDump {
         for (int i = 0; i < segmentNames.length; i++) {
             if (segmentNames[i].equals(segment)) {
                 Integer[] bounds = new Integer[2];
-                bounds[0] = new Integer(getBaseAddresses(segmentNames)[i]);
-                bounds[1] = new Integer(getLimitAddresses(segmentNames)[i]);
+                bounds[0] = getBaseAddresses(segmentNames)[i];
+                bounds[1] = getLimitAddresses(segmentNames)[i];
                 return bounds;
             }
         }

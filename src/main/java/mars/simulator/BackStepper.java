@@ -62,7 +62,7 @@ public class BackStepper {
     private static final int NOT_PC_VALUE = -1;
 
     private boolean engaged;
-    private BackstepStack backSteps;
+    private final BackstepStack backSteps;
 
     // One can argue using java.util.Stack, given its clumsy implementation.
     // A homegrown linked implementation will be more streamlined, but

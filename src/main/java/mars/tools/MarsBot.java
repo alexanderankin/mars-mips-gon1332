@@ -113,7 +113,7 @@ public class MarsBot implements Observer, MarsTool {
                     // System.out.println(" ------- Heading is " + MarsBotHeading + ", angle is " + tempAngle);
                     // System.out.println(" ------- New X,Y is (" + MarsBotXPosition + "," + MarsBotYPosition + ")" );
 
-                    // Whether or not we're leaving a track, write the current point to the
+                    // Whether we're leaving a track, write the current point to the
                     // current position in the array.
                     //   -- If we are not leaving a track now, we will need the current point to
                     //      start a future track, and that goes into the array.

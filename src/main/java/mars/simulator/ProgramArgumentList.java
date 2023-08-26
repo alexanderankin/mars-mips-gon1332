@@ -49,7 +49,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class ProgramArgumentList {
 
-    ArrayList programArgumentList;
+    ArrayList<String> programArgumentList;
 
     /**
      * Constructor that parses string to produce list.  Delimiters
@@ -60,7 +60,7 @@ public class ProgramArgumentList {
      */
     public ProgramArgumentList(String args) {
         StringTokenizer st = new StringTokenizer(args);
-        programArgumentList = new ArrayList(st.countTokens());
+        programArgumentList = new ArrayList<>(st.countTokens());
         while (st.hasMoreTokens()) {
             programArgumentList.add(st.nextToken());
         }
@@ -79,15 +79,13 @@ public class ProgramArgumentList {
      * Constructor that gets list from section of String array, one
      * argument per element.
      *
-     * @param args          Array of String, each element containing one argument
+     * @param list          Array of String, each element containing one argument
      * @param startPosition Index of array element containing the first argument; all remaining
      *                      elements are assumed to contain an argument.
      */
     public ProgramArgumentList(String[] list, int startPosition) {
-        programArgumentList = new ArrayList(list.length - startPosition);
-        for (int i = startPosition; i < list.length; i++) {
-            programArgumentList.add(list[i]);
-        }
+        programArgumentList = new ArrayList<>(list.length - startPosition);
+        programArgumentList.addAll(Arrays.asList(list).subList(startPosition, list.length));
     }
 
     /**
@@ -95,7 +93,7 @@ public class ProgramArgumentList {
      *
      * @param list ArrayList of String, each element containing one argument
      */
-    public ProgramArgumentList(ArrayList list) {
+    public ProgramArgumentList(List<String> list) {
         this(list, 0);
     }
 
@@ -104,15 +102,15 @@ public class ProgramArgumentList {
      * Constructor that gets list from section of String ArrayList, one
      * argument per element.
      *
-     * @param args          ArrayList of String, each element containing one argument
+     * @param list          ArrayList of String, each element containing one argument
      * @param startPosition Index of array element containing the first argument; all remaining
      *                      elements are assumed to contain an argument.
      */
-    public ProgramArgumentList(ArrayList list, int startPosition) {
+    public ProgramArgumentList(List<String> list, int startPosition) {
         if (list == null || list.size() < startPosition) {
-            programArgumentList = new ArrayList(0);
+            programArgumentList = new ArrayList<>(0);
         } else {
-            programArgumentList = new ArrayList(list.size() - startPosition);
+            programArgumentList = new ArrayList<>(list.size() - startPosition);
             for (int i = startPosition; i < list.size(); i++) {
                 programArgumentList.add(list.get(i));
             }
@@ -160,7 +158,7 @@ public class ProgramArgumentList {
         int[] argStartAddress = new int[programArgumentList.size()];
         try { // needed for all memory writes
             for (int i = 0; i < programArgumentList.size(); i++) {
-                programArgument = (String) programArgumentList.get(i);
+                programArgument = programArgumentList.get(i);
                 Globals.memory.set(highAddress, 0, 1);  // trailing null byte for each argument
                 highAddress--;
                 for (int j = programArgument.length() - 1; j >= 0; j--) {
@@ -190,7 +188,7 @@ public class ProgramArgumentList {
 
             // Need to set $sp register to stack address, $a0 to argc, $a1 to argv
             // Need to by-pass the backstepping mechanism so go directly to Register instead of RegisterFile
-            Register[] registers = RegisterFile.getRegisters();
+            // Register[] registers = RegisterFile.getRegisters();
             RegisterFile.getUserRegister("$sp").setValue(stackAddress + Memory.WORD_LENGTH_BYTES);
             RegisterFile.getUserRegister("$a0").setValue(argStartAddress.length); // argc
             RegisterFile.getUserRegister("$a1").setValue(stackAddress + Memory.WORD_LENGTH_BYTES + Memory.WORD_LENGTH_BYTES); // argv
@@ -201,7 +199,6 @@ public class ProgramArgumentList {
             System.out.println("Internal Error: Memory write error occurred while storing program arguments! " + aee);
             System.exit(0);
         }
-        return;
     }
 
 

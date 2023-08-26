@@ -7,7 +7,6 @@ import mars.assembler.*;
 import mars.venus.*;
 import mars.util.*;
 
-import java.io.*;
 import java.util.*;
 
 /*
@@ -46,8 +45,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class Globals {
     // List these first because they are referenced by methods called at initialization.
-    private static String configPropertiesFile = "Config";
-    private static String syscallPropertiesFile = "Syscall";
+    private static final String configPropertiesFile = "Config";
+    private static final String syscallPropertiesFile = "Syscall";
 
     /**
      * The set of implemented MIPS instructions.
@@ -68,9 +67,9 @@ public class Globals {
     /**
      * Lock variable used at head of synchronized block to guard MIPS memory and registers
      **/
-    public static Object memoryAndRegistersLock = new Object();
+    public static final Object memoryAndRegistersLock = new Object();
     /**
-     * Flag to determine whether or not to produce internal debugging information.
+     * Flag to determine whether to produce internal debugging information.
      **/
     public static boolean debug = false;
     /**
@@ -90,7 +89,7 @@ public class Globals {
      * Path to folder that contains help text
      */
     public static final String helpPath = "/help/";
-    /* Flag that indicates whether or not instructionSet has been initialized. */
+    /* Flag that indicates whether instructionSet has been initialized. */
     private static boolean initialized = false;
     /* The GUI being used (if any) with this simulator. */
     static VenusUI gui = null;
@@ -101,7 +100,7 @@ public class Globals {
     /**
      * List of accepted file extensions for MIPS assembly source files.
      */
-    public static final ArrayList fileExtensions = getFileExtensions();
+    public static final List<String> fileExtensions = getFileExtensions();
     /**
      * Maximum length of scrolled message window (MARS Messages and Run I/O)
      */
@@ -218,12 +217,13 @@ public class Globals {
 
     // Read and return integer property value for given file and property name.
     // Default value is returned if property file or name not found.
+    @SuppressWarnings("SameParameterValue")
     private static int getIntegerProperty(String propertiesFile, String propertyName, int defaultValue) {
         int limit = defaultValue;  // just in case no entry is found
         Properties properties = PropertiesFile.loadPropertiesFromFile(propertiesFile);
         try {
             limit = Integer.parseInt(properties.getProperty(propertyName, Integer.toString(defaultValue)));
-        } catch (NumberFormatException nfe) {
+        } catch (NumberFormatException ignored) {
         } // do nothing, I already have a default
         return limit;
     }
@@ -231,8 +231,8 @@ public class Globals {
 
     // Read assembly language file extensions from properties file.  Resulting
     // string is tokenized into array list (assume StringTokenizer default delimiters).
-    private static ArrayList getFileExtensions() {
-        ArrayList extensionsList = new ArrayList();
+    private static List<String> getFileExtensions() {
+        List<String> extensionsList = new ArrayList<>();
         String extensions = getPropertyEntry(configPropertiesFile, "Extensions");
         if (extensions != null) {
             StringTokenizer st = new StringTokenizer(extensions);
@@ -245,14 +245,14 @@ public class Globals {
 
     /**
      * Get list of MarsTools that reside outside the MARS distribution.
-     * Currently this is done by adding the tool's path name to the list
+     * Currently, this is done by adding the tool's path name to the list
      * of values for the external_tools property. Use ";" as delimiter!
      *
      * @return ArrayList.  Each item is file path to .class file
      * of a class that implements MarsTool.  If none, returns empty list.
      */
-    public static ArrayList getExternalTools() {
-        ArrayList toolsList = new ArrayList();
+    public static List<String> getExternalTools() {
+        List<String> toolsList = new ArrayList<>();
         String delimiter = ";";
         String tools = getPropertyEntry(configPropertiesFile, "ExternalTools");
         if (tools != null) {
@@ -281,10 +281,10 @@ public class Globals {
      *
      * @return ArrayList of SyscallNumberOverride objects
      */
-    public ArrayList getSyscallOverrides() {
-        ArrayList overrides = new ArrayList();
+    public List<SyscallNumberOverride> getSyscallOverrides() {
+        List<SyscallNumberOverride> overrides = new ArrayList<>();
         Properties properties = PropertiesFile.loadPropertiesFromFile(syscallPropertiesFile);
-        Enumeration keys = properties.keys();
+        Enumeration<?> keys = properties.keys();
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
             overrides.add(new SyscallNumberOverride(key, properties.getProperty(key)));

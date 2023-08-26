@@ -1,6 +1,8 @@
 package mars.assembler;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /*
 Copyright (c) 2003-2012,  Pete Sanderson and Kenneth Vollmar
@@ -42,7 +44,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public final class Directives {
 
-    private static ArrayList directiveList = new ArrayList();
+    private static final List<Directives> directiveList = new ArrayList<>();
+
     public static final Directives DATA = new Directives(".data", "Subsequent items stored in Data segment at next available address");
     public static final Directives TEXT = new Directives(".text", "Subsequent items (instructions) stored in Text segment at next available address");
     public static final Directives WORD = new Directives(".word", "Store the listed value(s) as 32 bit words on word boundary");
@@ -68,18 +71,15 @@ public final class Directives {
     public static final Directives INCLUDE = new Directives(".include", "Insert the contents of the specified file.  Put filename in quotes.");
 
 
-    private String descriptor;
-    private String description; // help text
+    private final String name;
+    private final String description; // help text
 
     private Directives() {
-        // private ctor assures no objects can be created other than those above.
-        this.descriptor = "generic";
-        this.description = "";
-        directiveList.add(this);
+        throw new UnsupportedOperationException();
     }
 
     private Directives(String name, String description) {
-        this.descriptor = name;
+        this.name = name;
         this.description = description;
         directiveList.add(this);
     }
@@ -92,11 +92,9 @@ public final class Directives {
      **/
 
     public static Directives matchDirective(String str) {
-        Directives match;
-        for (int i = 0; i < directiveList.size(); i++) {
-            match = (Directives) directiveList.get(i);
-            if (str.equalsIgnoreCase(match.descriptor)) {
-                return match;
+        for (Directives directives : directiveList) {
+            if (str.equalsIgnoreCase(directives.name)) {
+                return directives;
             }
         }
         return null;
@@ -111,17 +109,10 @@ public final class Directives {
      * @return If match is found, returns ArrayList of matching Directives objects, else returns <tt>null</tt>.
      **/
 
-    public static ArrayList prefixMatchDirectives(String str) {
-        ArrayList matches = null;
-        for (int i = 0; i < directiveList.size(); i++) {
-            if (((Directives) directiveList.get(i)).descriptor.toLowerCase().startsWith(str.toLowerCase())) {
-                if (matches == null) {
-                    matches = new ArrayList();
-                }
-                matches.add(directiveList.get(i));
-            }
-        }
-        return matches;
+    public static List<Directives> prefixMatchDirectives(String str) {
+        return directiveList.stream()
+                .filter(directives -> directives.name.toLowerCase().startsWith(str.toLowerCase()))
+                .collect(Collectors.toList());
     }
 
 
@@ -132,7 +123,7 @@ public final class Directives {
      **/
 
     public String toString() {
-        return this.descriptor;
+        return this.name;
     }
 
 
@@ -143,7 +134,7 @@ public final class Directives {
      **/
 
     public String getName() {
-        return this.descriptor;
+        return this.name;
     }
 
     /**
@@ -161,7 +152,7 @@ public final class Directives {
      *
      * @return MIPS Directive
      **/
-    public static ArrayList getDirectiveList() {
+    public static List<Directives> getDirectiveList() {
         return directiveList;
     }
 

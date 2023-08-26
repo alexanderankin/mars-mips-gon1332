@@ -102,7 +102,7 @@ public class KeyboardAndDisplaySimulator extends AbstractMarsToolAndApplication 
     private int intWithCharacterToDisplay;
     private boolean displayAfterDelay = true;
 
-    // Whether or not display position is sequential (JTextArea append)
+    // Whether display position is sequential (JTextArea append)
     // or random access (row, column).  Supports new random access feature. DPS 17-July-2014
     private boolean displayRandomAccessMode = false;
     private int rows, columns;

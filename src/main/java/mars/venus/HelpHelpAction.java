@@ -8,6 +8,7 @@ import java.util.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.html.*;
@@ -124,9 +125,9 @@ public class HelpHelpAction extends GuiAction {
             InputStream is = this.getClass().getResourceAsStream(Globals.helpPath + filename);
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
             String line;
-            StringBuffer text = new StringBuffer();
+            StringBuilder text = new StringBuilder();
             while ((line = in.readLine()) != null) {
-                text.append(line + "\n");
+                text.append(line).append("\n");
             }
             in.close();
             helpDisplay = new JEditorPane("text/html", text.toString());
@@ -151,11 +152,12 @@ public class HelpHelpAction extends GuiAction {
         JEditorPane marsCopyrightDisplay;
         try {
             InputStream is = this.getClass().getResourceAsStream("/MARSlicense.txt");
+            Objects.requireNonNull(is);
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
             String line;
-            StringBuffer text = new StringBuffer("<pre>");
+            StringBuilder text = new StringBuilder("<pre>");
             while ((line = in.readLine()) != null) {
-                text.append(line + "\n");
+                text.append(line).append("\n");
             }
             in.close();
             text.append("</pre>");
@@ -279,18 +281,15 @@ public class HelpHelpAction extends GuiAction {
 
     /////////////////////////////////////////////////////////////////////////////
     private JScrollPane createMipsDirectivesHelpPane() {
-        Vector exampleList = new Vector();
+        Vector<String> exampleList = new Vector<>();
         String blanks = "            ";  // 12 blanks
-        Directives direct;
-        Iterator it = Directives.getDirectiveList().iterator();
-        while (it.hasNext()) {
-            direct = (Directives) it.next();
+        for (Directives direct : Directives.getDirectiveList()) {
             exampleList.add(direct.toString()
                             + blanks.substring(0, Math.max(0, blanks.length() - direct.toString().length()))
                             + direct.getDescription());
         }
         Collections.sort(exampleList);
-        JList examples = new JList(exampleList);
+        JList<String> examples = new JList<>(exampleList);
         JScrollPane mipsScrollPane = new JScrollPane(examples, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         examples.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -299,14 +298,10 @@ public class HelpHelpAction extends GuiAction {
 
     ////////////////////////////////////////////////////////////////////////////
     private JScrollPane createMipsInstructionHelpPane(String instructionClassName) {
-        ArrayList instructionList = Globals.instructionSet.getInstructionList();
-        Vector exampleList = new Vector(instructionList.size());
-        Iterator it = instructionList.iterator();
-        Instruction instr;
+        List<Instruction> instructionList = Globals.instructionSet.getInstructionList();
+        Vector<String> exampleList = new Vector<>(instructionList.size());
         String blanks = "                        ";  // 24 blanks
-        Class instructionClass;
-        while (it.hasNext()) {
-            instr = (Instruction) it.next();
+        for (Instruction instr : instructionList) {
             try {
                 if (Class.forName(instructionClassName).isInstance(instr)) {
                     exampleList.add(instr.getExampleFormat()
@@ -316,18 +311,19 @@ public class HelpHelpAction extends GuiAction {
             } catch (ClassNotFoundException cnfe) {
                 System.out.println(cnfe + " " + instructionClassName);
             }
+
         }
         Collections.sort(exampleList);
-        JList examples = new JList(exampleList);
+        JList<String> examples = new JList<>(exampleList);
         JScrollPane mipsScrollPane = new JScrollPane(examples, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         examples.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        examples.setCellRenderer(new MyCellRenderer());
+        examples.setCellRenderer(new MyCellRenderer<>());
         return mipsScrollPane;
     }
 
 
-    private class MyCellRenderer extends JLabel implements ListCellRenderer {
+    private static class MyCellRenderer<T> extends JLabel implements ListCellRenderer<T> {
         // This is the only method defined by ListCellRenderer.
         // We just reconfigure the JLabel each time we're called.
         public Component getListCellRendererComponent(

@@ -38,7 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class MarsSplashScreen extends JWindow {
 
-    private int duration;
+    private final int duration;
 
     public MarsSplashScreen(int d) {
         duration = d;
@@ -89,12 +89,12 @@ public class MarsSplashScreen extends JWindow {
         // Wait a little while, maybe while loading resources
         try {
             Thread.sleep(duration);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         setVisible(false);
     }
 
-    class ImageBackgroundPanel extends JPanel {
+    static class ImageBackgroundPanel extends JPanel {
         Image image;
 
         public ImageBackgroundPanel() {

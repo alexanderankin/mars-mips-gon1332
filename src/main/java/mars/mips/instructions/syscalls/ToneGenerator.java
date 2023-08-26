@@ -83,7 +83,7 @@ class ToneGenerator {
      */
     public final static byte DEFAULT_VOLUME = 100;
 
-    private static Executor threadPool = Executors.newCachedThreadPool();
+    private static final Executor threadPool = Executors.newCachedThreadPool();
 
     /**
      * Produces a Tone with the specified pitch, duration, and instrument,
@@ -135,6 +135,7 @@ class ToneGenerator {
  * instrument (patch), and volume.  The tone can be passed to a thread
  * and will be played using MIDI.
  */
+@SuppressWarnings("FieldMayBeFinal")
 class Tone implements Runnable {
 
     /**
@@ -203,7 +204,7 @@ class Tone implements Runnable {
     private void playTone() {
 
         try {
-            Sequencer player = null;
+            Sequencer player;
             openLock.lock();
             try {
                 player = MidiSystem.getSequencer();

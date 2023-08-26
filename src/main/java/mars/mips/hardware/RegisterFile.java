@@ -1,8 +1,14 @@
 package mars.mips.hardware;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Observer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import mars.Globals;
+import mars.MIPSprogram;
 import mars.assembler.SymbolTable;
 import mars.mips.instructions.Instruction;
 import mars.util.Binary;
@@ -47,7 +53,7 @@ public class RegisterFile {
     public static final int GLOBAL_POINTER_REGISTER = 28;
     public static final int STACK_POINTER_REGISTER = 29;
 
-    private static Register[] regFile =
+    static final Register[] regFile =
             {new Register("$zero", 0, 0), new Register("$at", 1, 0),
                     new Register("$v0", 2, 0), new Register("$v1", 3, 0),
                     new Register("$a0", 4, 0), new Register("$a1", 5, 0),
@@ -67,21 +73,23 @@ public class RegisterFile {
                     new Register("$fp", 30, 0), new Register("$ra", 31, 0)
             };
 
-    private static Register programCounter = new Register("pc", 32, Memory.textBaseAddress);
-    private static Register hi = new Register("hi", 33, 0);// this is an internal register with arbitrary number
-    private static Register lo = new Register("lo", 34, 0);// this is an internal register with arbitrary number
+    private static final Register programCounter = new Register("pc", 32, Memory.textBaseAddress);
+    private static final Register hi = new Register("hi", 33, 0);// this is an internal register with arbitrary number
+    private static final Register lo = new Register("lo", 34, 0);// this is an internal register with arbitrary number
 
+    static final Map<String, Register> registersByName = Stream.concat(Arrays.stream(regFile), Stream.of(programCounter, hi, lo))
+            .collect(Collectors.toMap(Register::getName, Function.identity()));
 
     /**
      * Method for displaying the register values for debugging.
      **/
 
     public static void showRegisters() {
-        for (int i = 0; i < regFile.length; i++) {
-            System.out.println("Name: " + regFile[i].getName());
-            System.out.println("Number: " + regFile[i].getNumber());
-            System.out.println("Value: " + regFile[i].getValue());
-            System.out.println("");
+        for (Register register : regFile) {
+            System.out.println("Name: " + register.getName());
+            System.out.println("Number: " + register.getNumber());
+            System.out.println("Value: " + register.getValue());
+            System.out.println();
         }
     }
 
@@ -94,29 +102,21 @@ public class RegisterFile {
      **/
 
     public static int updateRegister(int num, int val) {
-        int old = 0;
-        if (num == 0) {
-            // System.out.println("You can not change the value of the zero register.");
-        } else {
-            for (int i = 0; i < regFile.length; i++) {
-                if (regFile[i].getNumber() == num) {
-                    old = (Globals.getSettings().getBackSteppingEnabled())
-                            ? Globals.program.getBackStepper().addRegisterFileRestore(num, regFile[i].setValue(val))
-                            : regFile[i].setValue(val);
-                    break;
-                }
-            }
-        }
-        if (num == 33) {// updates the hi register
-            old = (Globals.getSettings().getBackSteppingEnabled())
-                    ? Globals.program.getBackStepper().addRegisterFileRestore(num, hi.setValue(val))
-                    : hi.setValue(val);
-        } else if (num == 34) {// updates the low register
-            old = (Globals.getSettings().getBackSteppingEnabled())
-                    ? Globals.program.getBackStepper().addRegisterFileRestore(num, lo.setValue(val))
-                    : lo.setValue(val);
-        }
-        return old;
+        return updateRegister(Globals.getSettings(), Globals.program, registerForUpdating(num), val);
+    }
+
+    public static int updateRegister(mars.Settings settings, MIPSprogram mipsProgram, Register register, int val) {
+        return settings.getBackSteppingEnabled()
+                ? mipsProgram.getBackStepper().addRegisterFileRestore(register.getNumber(), register.setValue(val))
+                : register.setValue(val);
+    }
+
+    public static Register registerForUpdating(int num) {
+        // You can not change the value of the zero register.
+        if (num > 0 && num < regFile.length) return regFile[num];
+        if (num == 33) return hi;
+        if (num == 34) return lo;
+        return null;
     }
 
     /**
@@ -127,16 +127,9 @@ public class RegisterFile {
      **/
 
     public static void updateRegister(String reg, int val) {
-        if (reg.equals("zero")) {
-            // System.out.println("You can not change the value of the zero register.");
-        } else {
-            for (int i = 0; i < regFile.length; i++) {
-                if (regFile[i].getName().equals(reg)) {
-                    updateRegister(i, val);
-                    break;
-                }
-            }
-        }
+        Register register = registersByName.get(reg);
+        if (register == null) return;
+        updateRegister(Globals.getSettings(), Globals.program, register, val);
     }
 
     /**
@@ -153,7 +146,6 @@ public class RegisterFile {
             return lo.getValue();
         } else
             return regFile[num].getValue();
-
     }
 
     /**
@@ -165,14 +157,7 @@ public class RegisterFile {
      **/
 
     public static int getNumber(String n) {
-        int j = -1;
-        for (int i = 0; i < regFile.length; i++) {
-            if (regFile[i].getName().equals(n)) {
-                j = regFile[i].getNumber();
-                break;
-            }
-        }
-        return j;
+        return registersByName.get(n).getNumber();
     }
 
     /**
@@ -203,9 +188,9 @@ public class RegisterFile {
                 // check for register mnemonic $zero thru $ra
                 reg = null; // just to be sure
                 // just do linear search; there aren't that many registers
-                for (int i = 0; i < regFile.length; i++) {
-                    if (Rname.equals(regFile[i].getName())) {
-                        reg = regFile[i];
+                for (Register register : regFile) {
+                    if (Rname.equals(register.getName())) {
+                        reg = register;
                         break;
                     }
                 }
@@ -301,8 +286,8 @@ public class RegisterFile {
      **/
 
     public static void resetRegisters() {
-        for (int i = 0; i < regFile.length; i++) {
-            regFile[i].resetValue();
+        for (Register register : regFile) {
+            register.resetValue();
         }
         initializeProgramCounter(Globals.getSettings().getStartAtMain());// replaces "programCounter.resetValue()", DPS 3/3/09
         hi.resetValue();
@@ -323,8 +308,8 @@ public class RegisterFile {
      * Counter.
      */
     public static void addRegistersObserver(Observer observer) {
-        for (int i = 0; i < regFile.length; i++) {
-            regFile[i].addObserver(observer);
+        for (Register register : regFile) {
+            register.addObserver(observer);
         }
         hi.addObserver(observer);
         lo.addObserver(observer);
@@ -336,8 +321,8 @@ public class RegisterFile {
      * Counter.
      */
     public static void deleteRegistersObserver(Observer observer) {
-        for (int i = 0; i < regFile.length; i++) {
-            regFile[i].deleteObserver(observer);
+        for (Register register : regFile) {
+            register.deleteObserver(observer);
         }
         hi.deleteObserver(observer);
         lo.deleteObserver(observer);

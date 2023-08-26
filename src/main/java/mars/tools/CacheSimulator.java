@@ -558,15 +558,15 @@ public class CacheSimulator extends AbstractMarsToolAndApplication {
 
 
     private void updateMemoryAccessCountDisplay() {
-        memoryAccessCountDisplay.setText(new Integer(memoryAccessCount).toString());
+        memoryAccessCountDisplay.setText(String.valueOf(memoryAccessCount));
     }
 
     private void updateCacheHitCountDisplay() {
-        cacheHitCountDisplay.setText(new Integer(cacheHitCount).toString());
+        cacheHitCountDisplay.setText(String.valueOf(cacheHitCount));
     }
 
     private void updateCacheMissCountDisplay() {
-        cacheMissCountDisplay.setText(new Integer(cacheMissCount).toString());
+        cacheMissCountDisplay.setText(String.valueOf(cacheMissCount));
     }
 
     private void updateCacheHitRateDisplay() {
